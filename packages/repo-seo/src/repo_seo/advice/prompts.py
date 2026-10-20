@@ -37,7 +37,7 @@ SYSTEM_PROMPT = f"""你是一名资深开源项目 SEO/AEO 顾问（{PROMPT_V1}�
 3. rule_id 必须来自上表，不得编造；
 4. suggestion 要结合项目实际情况（技术栈、描述、README 内容），不要套模板；
 5. example 必须是可直接复制粘贴的优化文本；
-6. 全程使用与项目描述相同的语言（项目描述为中文则用中文，否则用英文）。"""
+6. 全程使用简体中文输出（problem / suggestion / reason / example 的正文一律用中文，可保留 GitHub、SEO、AEO、README、Topics、Python 等英文专有名词与技术词汇）。"""
 
 
 def build_user_prompt(
