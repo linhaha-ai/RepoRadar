@@ -1,0 +1,165 @@
+# RepoRadar 规则配置模板（repo-seo rules --export-config）
+
+# 1) 启用/禁用：enabled = true / false（禁用后该规则不计分，维度满分随之变化）
+# 2) 覆盖分值：score = 6.0（自定义配置下维度满分 = 启用规则分值之和）
+# 3) 覆盖优先级：priority = "P0"
+# 4) 阈值参数：params = { key = value }（仅下方标注 * 的规则支持）
+
+[rules.R01]
+# 项目定位与价值主张（readme，默认 5 分，P0，semantic）
+# 通过条件：README 首段 ≥60 字符且说明是什么+解决什么
+enabled = true
+# 可配参数：
+#   min_chars = 60  # README 首段最小字符数
+
+[rules.R02]
+# 关键词与语义覆盖（readme，默认 5 分，P0，semantic）
+# 通过条件：核心词自然出现 ≥3 次且无堆砌
+enabled = true
+# 可配参数：
+#   min_hits = 3  # 核心词最小命中次数
+#   max_hits = 30  # 核心词堆砌阈值（超过判定堆砌）
+
+[rules.R03]
+# 快速开始与使用示例（readme，默认 5 分，P0，hard）
+# 通过条件：有可复制安装命令 + ≥1 个带语言代码示例
+enabled = true
+
+[rules.R04]
+# 内容结构与链接完整性（readme，默认 5 分，P1，hard）
+# 通过条件：H1 唯一、层级连续、代码块有语言标注
+enabled = true
+
+[rules.R05]
+# AEO 友好内容（readme，默认 5 分，P1，semantic）
+# 通过条件：含 FAQ/使用场景/限制说明之一
+enabled = true
+
+[rules.M01]
+# 仓库名称（metadata，默认 4 分，P1，hard）
+# 通过条件：名称 3~40 字符、无泛化前缀、含领域词
+enabled = true
+
+[rules.M02]
+# Description（metadata，默认 6 分，P0，hard）
+# 通过条件：非空、≤350、核心词前置、英文优先
+enabled = true
+# 可配参数：
+#   max_desc_chars = 350  # Description 最大字符数
+
+[rules.M03]
+# Topics（metadata，默认 6 分，P0，semantic）
+# 通过条件：1~20 个、≥6 最佳、与主题语义相关
+enabled = true
+# 可配参数：
+#   min_topics = 6  # Topics 推荐数量下限
+#   max_topics = 20  # Topics GitHub 硬上限
+
+[rules.M04]
+# 主语言与分类定位（metadata，默认 2 分，P2，hard）
+# 通过条件：language 非空
+enabled = true
+
+[rules.M05]
+# 官网/文档/演示链接（metadata，默认 2 分，P2，hard）
+# 通过条件：Homepage 非空且为 http(s)
+enabled = true
+
+[rules.A01]
+# 实体与项目身份清晰度（aeo，默认 4 分，P0，semantic）
+# 通过条件：README 含项目名且首段明确技术栈
+enabled = true
+
+[rules.A02]
+# 功能与适用场景表达（aeo，默认 4 分，P1，semantic）
+# 通过条件：含 Use Cases / 适用场景段落
+enabled = true
+
+[rules.A03]
+# 可引用的事实与示例（aeo，默认 4 分，P1，semantic）
+# 通过条件：有代码示例 + 功能清单
+enabled = true
+
+[rules.A04]
+# 结构化文档与语义组织（aeo，默认 4 分，P1，hard）
+# 通过条件：H2 章节 ≥3 且有列表/表格
+enabled = true
+
+[rules.A05]
+# 信息一致性与限制说明（aeo，默认 4 分，P1，semantic）
+# 通过条件：无夸大词且有限制/兼容说明
+enabled = true
+
+[rules.D01]
+# 仓库页面可访问性（discoverability，默认 3 分，P0，hard）
+# 通过条件：公开且非归档
+enabled = true
+
+[rules.D02]
+# 搜索引擎收录证据（discoverability，默认 4 分，P1，hard）
+# 通过条件：有外部收录证据（V2 接入 Search Console）
+enabled = true
+
+[rules.D03]
+# 文档站可抓取性（discoverability，默认 3 分，P2，hard）
+# 通过条件：有文档站（Homepage 或 GitHub Pages）
+enabled = true
+
+[rules.D04]
+# Sitemap 与规范 URL（discoverability，默认 2 分，P2，hard）
+# 通过条件：文档站存在且具备 sitemap 协议
+enabled = true
+
+[rules.D05]
+# 内外部链接完整性（discoverability，默认 3 分，P1，hard）
+# 通过条件：README 含有效 http(s) 链接
+enabled = true
+
+[rules.H01]
+# License 与开源许可说明（health，默认 2 分，P0，hard）
+# 通过条件：LICENSE 文件存在且 SPDX 可识别
+enabled = true
+
+[rules.H02]
+# CI 与自动化检查（health，默认 2 分，P1，hard）
+# 通过条件：存在 CI 配置
+enabled = true
+
+[rules.H03]
+# 测试及质量保障（health，默认 2 分，P1，hard）
+# 通过条件：存在 tests/spec 目录或测试配置
+enabled = true
+
+[rules.H04]
+# Release 与版本管理（health，默认 2 分，P2，hard）
+# 通过条件：有 ≥1 个语义化 Release
+enabled = true
+
+[rules.H05]
+# 依赖、安装及安全信息（health，默认 2 分，P2，hard）
+# 通过条件：存在包元信息文件
+enabled = true
+
+[rules.AC01]
+# 近期有效维护（activity，默认 3 分，P1，hard）
+# 通过条件：按项目年龄动态阈值内保持推送（<1 年看 90 天，≥1 年看 180 天）
+enabled = true
+# 可配参数：
+#   new_threshold = 90  # 新项目（<1 年）最近推送阈值天数
+#   mature_threshold = 180  # 成熟项目最近推送阈值天数
+#   age_cutoff = 365  # 新/成熟项目分界天数
+
+[rules.AC02]
+# Issue 处理与响应（activity，默认 3 分，P1，hard）
+# 通过条件：有 issue 历史且积压可控；无历史 → UNKNOWN
+enabled = true
+
+[rules.AC03]
+# Release 与版本更新（activity，默认 2 分，P2，hard）
+# 通过条件：180 天内有 Release
+enabled = true
+
+[rules.AC04]
+# 贡献活动与协作（activity，默认 2 分，P2，hard）
+# 通过条件：贡献者 ≥2 或有 CONTRIBUTING
+enabled = true

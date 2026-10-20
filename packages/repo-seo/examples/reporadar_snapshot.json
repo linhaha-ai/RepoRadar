@@ -1,0 +1,42 @@
+{
+  "full_name": "linhaha-ai/RepoRadar",
+  "owner": "linhaha-ai",
+  "name": "RepoRadar",
+  "description": "GitHub 项目搜索优化（原生搜索 + AI 大模型检索曝光，AEO）",
+  "topics": [],
+  "language": null,
+  "license_spdx": "Apache-2.0",
+  "visibility": "private",
+  "default_branch": "main",
+  "homepage": null,
+  "has_pages": false,
+  "archived": false,
+  "created_at": "2026-10-19T11:05:59Z",
+  "pushed_at": "2026-10-19T11:06:00Z",
+  "updated_at": "2026-10-19T11:06:04Z",
+  "stars": 0,
+  "forks": 0,
+  "open_issues": 0,
+  "watchers": 0,
+  "readme_text": null,
+  "readme_source": null,
+  "root_files": [
+    "LICENSE"
+  ],
+  "has_license_file": true,
+  "has_ci": false,
+  "has_tests": false,
+  "has_gitignore": false,
+  "has_contributing": false,
+  "has_code_of_conduct": false,
+  "package_meta": {},
+  "releases": [],
+  "contributors": [
+    {
+      "login": "lazyhunter9",
+      "contributions": 1
+    }
+  ],
+  "fetch_errors": [],
+  "fetched_at": "2026-10-19T19:32:44"
+}

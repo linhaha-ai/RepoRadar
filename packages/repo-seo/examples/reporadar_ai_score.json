@@ -1,0 +1,892 @@
+{
+  "snapshot": {
+    "full_name": "linhaha-ai/RepoRadar",
+    "owner": "linhaha-ai",
+    "name": "RepoRadar",
+    "description": "GitHub 项目搜索优化（原生搜索 + AI 大模型检索曝光，AEO）",
+    "topics": [],
+    "language": null,
+    "license_spdx": "Apache-2.0",
+    "visibility": "private",
+    "default_branch": "main",
+    "homepage": null,
+    "has_pages": false,
+    "archived": false,
+    "created_at": "2026-10-19T11:05:59Z",
+    "pushed_at": "2026-10-19T11:06:00Z",
+    "updated_at": "2026-10-19T11:06:04Z",
+    "stars": 0,
+    "forks": 0,
+    "open_issues": 0,
+    "watchers": 0,
+    "readme_text": null,
+    "readme_source": null,
+    "root_files": [
+      "LICENSE"
+    ],
+    "has_license_file": true,
+    "has_ci": false,
+    "has_tests": false,
+    "has_gitignore": false,
+    "has_contributing": false,
+    "has_code_of_conduct": false,
+    "package_meta": {},
+    "releases": [],
+    "contributors": [
+      {
+        "login": "lazyhunter9",
+        "contributions": 1
+      }
+    ],
+    "fetch_errors": [],
+    "fetched_at": "2026-10-19T21:35:15"
+  },
+  "score": {
+    "total": 16.5,
+    "dimensions": {
+      "readme": {
+        "label": "README 内容质量",
+        "earned": 0.0,
+        "eligible": 25.0,
+        "total": 25.0
+      },
+      "metadata": {
+        "label": "仓库元数据",
+        "earned": 8.5,
+        "eligible": 20.0,
+        "total": 20.0
+      },
+      "aeo": {
+        "label": "AI 检索准备度",
+        "earned": 0.0,
+        "eligible": 20.0,
+        "total": 20.0
+      },
+      "discoverability": {
+        "label": "搜索可发现性",
+        "earned": 0.0,
+        "eligible": 6.0,
+        "total": 15.0
+      },
+      "health": {
+        "label": "工程健康与可信度",
+        "earned": 2.0,
+        "eligible": 10.0,
+        "total": 10.0
+      },
+      "activity": {
+        "label": "项目活跃度",
+        "earned": 4.0,
+        "eligible": 7.0,
+        "total": 10.0
+      }
+    },
+    "results": [
+      {
+        "rule_id": "R01",
+        "name": "项目定位与价值主张",
+        "dimension": "readme",
+        "status": "fail",
+        "score": 5.0,
+        "score_earned": 0.0,
+        "evidence": "README 缺失或首段为空",
+        "reason": "AI 与 GitHub 搜索把 README 首段当作项目定位的第一信息源",
+        "suggestion": "在 H1 标题后补充一段：项目是什么 + 解决什么问题 + 目标用户",
+        "example": "RepoRadar is a CLI tool that scans any GitHub repo and reports its search & AI discoverability issues with actionable fixes.",
+        "priority": "P0",
+        "check_type": "semantic",
+        "confidence": 0.85
+      },
+      {
+        "rule_id": "R02",
+        "name": "关键词与语义覆盖",
+        "dimension": "readme",
+        "status": "fail",
+        "score": 5.0,
+        "score_earned": 0.0,
+        "evidence": "README 缺失",
+        "reason": "无内容可供关键词匹配",
+        "suggestion": "先创建 README",
+        "example": null,
+        "priority": "P0",
+        "check_type": "semantic",
+        "confidence": 0.8
+      },
+      {
+        "rule_id": "R03",
+        "name": "快速开始与使用示例",
+        "dimension": "readme",
+        "status": "fail",
+        "score": 5.0,
+        "score_earned": 0.0,
+        "evidence": "README 缺失",
+        "reason": "无安装/示例内容",
+        "suggestion": "先创建 README",
+        "example": null,
+        "priority": "P0",
+        "check_type": "hard",
+        "confidence": 1.0
+      },
+      {
+        "rule_id": "R04",
+        "name": "内容结构与链接完整性",
+        "dimension": "readme",
+        "status": "fail",
+        "score": 5.0,
+        "score_earned": 0.0,
+        "evidence": "README 缺失",
+        "reason": "无结构可言",
+        "suggestion": "先创建 README",
+        "example": null,
+        "priority": "P1",
+        "check_type": "hard",
+        "confidence": 1.0
+      },
+      {
+        "rule_id": "R05",
+        "name": "AEO 友好内容",
+        "dimension": "readme",
+        "status": "fail",
+        "score": 5.0,
+        "score_earned": 0.0,
+        "evidence": "README 缺失",
+        "reason": "无 AEO 内容",
+        "suggestion": "先创建 README",
+        "example": null,
+        "priority": "P1",
+        "check_type": "semantic",
+        "confidence": 0.85
+      },
+      {
+        "rule_id": "M01",
+        "name": "仓库名称",
+        "dimension": "metadata",
+        "status": "pass",
+        "score": 4.0,
+        "score_earned": 4.0,
+        "evidence": "名称「RepoRadar」长度合法、无泛化词，与描述共享词：reporadar",
+        "reason": "仓库名是搜索与 AI 的第一标题信号",
+        "suggestion": "无需修改",
+        "example": null,
+        "priority": "P1",
+        "check_type": "hard",
+        "confidence": 1.0
+      },
+      {
+        "rule_id": "M02",
+        "name": "Description",
+        "dimension": "metadata",
+        "status": "fail",
+        "score": 6.0,
+        "score_earned": 4.5,
+        "evidence": "非空✅；≤350✅；核心词未前置❌；英文为主✅",
+        "reason": "Description 是 GitHub 搜索摘要、Google 标题与 AI 读取的第一信息来源",
+        "suggestion": "一句话能力 + 技术栈 + 痛点，核心词前置，≤350 字符（英文优先）",
+        "example": "Lightweight TypeScript ORM for SQLite, zero dependencies, supports migration and batch insert.",
+        "priority": "P0",
+        "check_type": "hard",
+        "confidence": 1.0
+      },
+      {
+        "rule_id": "M03",
+        "name": "Topics",
+        "dimension": "metadata",
+        "status": "fail",
+        "score": 6.0,
+        "score_earned": 0.0,
+        "evidence": "Topics 为空",
+        "reason": "无 Topics 时 GitHub 与 AI 无法进行主题归类与相关搜索匹配",
+        "suggestion": "添加 6~12 个精准标签（大类 + 技术栈 + 场景长尾）",
+        "example": "typescript, sqlite, orm, database, nodejs, migration, zero-dependency",
+        "priority": "P0",
+        "check_type": "semantic",
+        "confidence": 0.85
+      },
+      {
+        "rule_id": "M04",
+        "name": "主语言与分类定位",
+        "dimension": "metadata",
+        "status": "fail",
+        "score": 2.0,
+        "score_earned": 0.0,
+        "evidence": "language 未识别（仓库无代码提交）",
+        "reason": "无主语言时项目类别定位缺失，相关技术栈搜索无法命中",
+        "suggestion": "提交至少一个代码文件（如 src/main.py）让 GitHub 识别语言",
+        "example": null,
+        "priority": "P2",
+        "check_type": "hard",
+        "confidence": 1.0
+      },
+      {
+        "rule_id": "M05",
+        "name": "官网/文档/演示链接",
+        "dimension": "metadata",
+        "status": "fail",
+        "score": 2.0,
+        "score_earned": 0.0,
+        "evidence": "未设置 Homepage",
+        "reason": "缺少官网/文档/演示入口，用户与 AI 少一个信任与理解通道",
+        "suggestion": "在仓库 Settings 的 Website 填入官网或 GitHub Pages 地址",
+        "example": null,
+        "priority": "P2",
+        "check_type": "hard",
+        "confidence": 1.0
+      },
+      {
+        "rule_id": "A01",
+        "name": "实体与项目身份清晰度",
+        "dimension": "aeo",
+        "status": "fail",
+        "score": 4.0,
+        "score_earned": 0.0,
+        "evidence": "README 缺失",
+        "reason": "AI 无内容可提取身份信息",
+        "suggestion": "先创建 README",
+        "example": null,
+        "priority": "P0",
+        "check_type": "semantic",
+        "confidence": 0.85
+      },
+      {
+        "rule_id": "A02",
+        "name": "功能与适用场景表达",
+        "dimension": "aeo",
+        "status": "fail",
+        "score": 4.0,
+        "score_earned": 0.0,
+        "evidence": "README 缺失",
+        "reason": "无场景表达",
+        "suggestion": "先创建 README",
+        "example": null,
+        "priority": "P1",
+        "check_type": "semantic",
+        "confidence": 0.9
+      },
+      {
+        "rule_id": "A03",
+        "name": "可引用的事实与示例",
+        "dimension": "aeo",
+        "status": "fail",
+        "score": 4.0,
+        "score_earned": 0.0,
+        "evidence": "README 缺失",
+        "reason": "无可引用内容",
+        "suggestion": "先创建 README",
+        "example": null,
+        "priority": "P1",
+        "check_type": "semantic",
+        "confidence": 0.8
+      },
+      {
+        "rule_id": "A04",
+        "name": "结构化文档与语义组织",
+        "dimension": "aeo",
+        "status": "fail",
+        "score": 4.0,
+        "score_earned": 0.0,
+        "evidence": "README 缺失",
+        "reason": "无结构可评估",
+        "suggestion": "先创建 README",
+        "example": null,
+        "priority": "P1",
+        "check_type": "hard",
+        "confidence": 1.0
+      },
+      {
+        "rule_id": "A05",
+        "name": "信息一致性与限制说明",
+        "dimension": "aeo",
+        "status": "fail",
+        "score": 4.0,
+        "score_earned": 0.0,
+        "evidence": "README 缺失",
+        "reason": "无法评估一致性",
+        "suggestion": "先创建 README",
+        "example": null,
+        "priority": "P1",
+        "check_type": "semantic",
+        "confidence": 0.85
+      },
+      {
+        "rule_id": "D01",
+        "name": "仓库页面可访问性",
+        "dimension": "discoverability",
+        "status": "fail",
+        "score": 3.0,
+        "score_earned": 0.0,
+        "evidence": "仓库为私有（visibility=private）",
+        "reason": "私有仓库无法被 GitHub 搜索、Google、AI 爬虫访问，可发现性为 0",
+        "suggestion": "将仓库设为 Public 才能获得任何外部曝光；开发期可用 Token 本地体检",
+        "example": "Settings → General → Danger Zone → Change visibility → Public",
+        "priority": "P0",
+        "check_type": "hard",
+        "confidence": 1.0
+      },
+      {
+        "rule_id": "D02",
+        "name": "搜索引擎收录证据",
+        "dimension": "discoverability",
+        "status": "unknown",
+        "score": 4.0,
+        "score_earned": 0.0,
+        "evidence": "无 Search Console 授权（V1 静态审计无法核验）",
+        "reason": "真实收录状态需要外部证据；未检测 ≠ 未收录",
+        "suggestion": "V2 接入 Search Console 后核验；或手动搜索 site:github.com/owner/repo 自查",
+        "example": null,
+        "priority": "P1",
+        "check_type": "hard",
+        "confidence": 1.0
+      },
+      {
+        "rule_id": "D03",
+        "name": "文档站可抓取性",
+        "dimension": "discoverability",
+        "status": "n_a",
+        "score": 3.0,
+        "score_earned": 0.0,
+        "evidence": "无独立文档站（无 Homepage 且无 GitHub Pages）",
+        "reason": "Sitemap/文档站不适用，不扣分",
+        "suggestion": "不适用",
+        "example": null,
+        "priority": "P2",
+        "check_type": "hard",
+        "confidence": 1.0
+      },
+      {
+        "rule_id": "D04",
+        "name": "Sitemap 与规范 URL",
+        "dimension": "discoverability",
+        "status": "n_a",
+        "score": 2.0,
+        "score_earned": 0.0,
+        "evidence": "无独立文档站",
+        "reason": "Sitemap 不适用，不扣分",
+        "suggestion": "不适用",
+        "example": null,
+        "priority": "P2",
+        "check_type": "hard",
+        "confidence": 1.0
+      },
+      {
+        "rule_id": "D05",
+        "name": "内外部链接完整性",
+        "dimension": "discoverability",
+        "status": "fail",
+        "score": 3.0,
+        "score_earned": 0.0,
+        "evidence": "README 缺失",
+        "reason": "无链接可指引用例/文档，AI 无法通过链接扩展信息",
+        "suggestion": "创建 README 并加入文档、示例链接",
+        "example": null,
+        "priority": "P1",
+        "check_type": "hard",
+        "confidence": 1.0
+      },
+      {
+        "rule_id": "H01",
+        "name": "License 与开源许可说明",
+        "dimension": "health",
+        "status": "pass",
+        "score": 2.0,
+        "score_earned": 2.0,
+        "evidence": "LICENSE 存在（SPDX: Apache-2.0）",
+        "reason": "许可清晰，AI 可放心推荐",
+        "suggestion": "无需修改",
+        "example": null,
+        "priority": "P0",
+        "check_type": "hard",
+        "confidence": 1.0
+      },
+      {
+        "rule_id": "H02",
+        "name": "CI 与自动化检查",
+        "dimension": "health",
+        "status": "fail",
+        "score": 2.0,
+        "score_earned": 0.0,
+        "evidence": "无 CI 配置",
+        "reason": "无 CI 表明构建与测试未经自动验证，用户与 AI 信任度下降",
+        "suggestion": "添加 GitHub Actions workflow（lint + test）",
+        "example": null,
+        "priority": "P1",
+        "check_type": "hard",
+        "confidence": 1.0
+      },
+      {
+        "rule_id": "H03",
+        "name": "测试及质量保障",
+        "dimension": "health",
+        "status": "fail",
+        "score": 2.0,
+        "score_earned": 0.0,
+        "evidence": "无测试目录/测试配置",
+        "reason": "无测试的项目被判定为未验证，影响可信度",
+        "suggestion": "创建 tests/ 目录并添加最小单元测试",
+        "example": null,
+        "priority": "P1",
+        "check_type": "hard",
+        "confidence": 1.0
+      },
+      {
+        "rule_id": "H04",
+        "name": "Release 与版本管理",
+        "dimension": "health",
+        "status": "fail",
+        "score": 2.0,
+        "score_earned": 0.0,
+        "evidence": "无 Release",
+        "reason": "无版本发布说明项目尚未对外交付，AI 引用时缺乏版本锚点",
+        "suggestion": "发布 v0.1.0 Release，写清版本说明（语义化版本）",
+        "example": null,
+        "priority": "P2",
+        "check_type": "hard",
+        "confidence": 1.0
+      },
+      {
+        "rule_id": "H05",
+        "name": "依赖、安装及安全信息",
+        "dimension": "health",
+        "status": "fail",
+        "score": 2.0,
+        "score_earned": 0.0,
+        "evidence": "无包元信息文件（package.json / pyproject.toml 等）",
+        "reason": "缺少依赖/安装声明，用户无法标准安装，AI 无法解析技术信息",
+        "suggestion": "添加包元信息文件并填写 description / keywords",
+        "example": null,
+        "priority": "P2",
+        "check_type": "hard",
+        "confidence": 1.0
+      },
+      {
+        "rule_id": "AC01",
+        "name": "近期有效维护",
+        "dimension": "activity",
+        "status": "pass",
+        "score": 3.0,
+        "score_earned": 3.0,
+        "evidence": "最近推送 0 天前（阈值 90 天）",
+        "reason": "维护活跃，按项目阶段动态评估",
+        "suggestion": "无需修改",
+        "example": null,
+        "priority": "P1",
+        "check_type": "hard",
+        "confidence": 1.0
+      },
+      {
+        "rule_id": "AC02",
+        "name": "Issue 处理与响应",
+        "dimension": "activity",
+        "status": "unknown",
+        "score": 3.0,
+        "score_earned": 0.0,
+        "evidence": "open_issues = 0（无法区分「从未开 issue」与「已全部处理」）",
+        "reason": "缺少 issue 历史数据，不做「无人使用」或「响应迅速」的误判",
+        "suggestion": "开启 Issues 并保持响应；或补充 issue 历史后复检",
+        "example": null,
+        "priority": "P1",
+        "check_type": "hard",
+        "confidence": 1.0
+      },
+      {
+        "rule_id": "AC03",
+        "name": "Release 与版本更新",
+        "dimension": "activity",
+        "status": "fail",
+        "score": 2.0,
+        "score_earned": 0.0,
+        "evidence": "无 Release",
+        "reason": "无版本发布节奏，AI 与用户难以确认项目在演进",
+        "suggestion": "发布语义化版本并写 Release Notes",
+        "example": null,
+        "priority": "P2",
+        "check_type": "hard",
+        "confidence": 1.0
+      },
+      {
+        "rule_id": "AC04",
+        "name": "贡献活动与协作",
+        "dimension": "activity",
+        "status": "fail",
+        "score": 2.0,
+        "score_earned": 1.0,
+        "evidence": "贡献者 ×1 且无 CONTRIBUTING",
+        "reason": "单人项目缺乏协作入口，社区参与度低",
+        "suggestion": "添加 CONTRIBUTING.md 引导贡献，或邀请协作者",
+        "example": null,
+        "priority": "P2",
+        "check_type": "hard",
+        "confidence": 1.0
+      }
+    ],
+    "top_issues": [
+      {
+        "rule_id": "M03",
+        "name": "Topics",
+        "dimension": "metadata",
+        "status": "fail",
+        "score": 6.0,
+        "score_earned": 0.0,
+        "evidence": "Topics 为空",
+        "reason": "无 Topics 时 GitHub 与 AI 无法进行主题归类与相关搜索匹配",
+        "suggestion": "添加 6~12 个精准标签（大类 + 技术栈 + 场景长尾）",
+        "example": "typescript, sqlite, orm, database, nodejs, migration, zero-dependency",
+        "priority": "P0",
+        "check_type": "semantic",
+        "confidence": 0.85
+      },
+      {
+        "rule_id": "R01",
+        "name": "项目定位与价值主张",
+        "dimension": "readme",
+        "status": "fail",
+        "score": 5.0,
+        "score_earned": 0.0,
+        "evidence": "README 缺失或首段为空",
+        "reason": "AI 与 GitHub 搜索把 README 首段当作项目定位的第一信息源",
+        "suggestion": "在 H1 标题后补充一段：项目是什么 + 解决什么问题 + 目标用户",
+        "example": "RepoRadar is a CLI tool that scans any GitHub repo and reports its search & AI discoverability issues with actionable fixes.",
+        "priority": "P0",
+        "check_type": "semantic",
+        "confidence": 0.85
+      },
+      {
+        "rule_id": "R02",
+        "name": "关键词与语义覆盖",
+        "dimension": "readme",
+        "status": "fail",
+        "score": 5.0,
+        "score_earned": 0.0,
+        "evidence": "README 缺失",
+        "reason": "无内容可供关键词匹配",
+        "suggestion": "先创建 README",
+        "example": null,
+        "priority": "P0",
+        "check_type": "semantic",
+        "confidence": 0.8
+      }
+    ],
+    "n_na_unknown": 4,
+    "warnings": []
+  },
+  "advice": {
+    "source": "ai",
+    "note": null,
+    "items": [
+      {
+        "rule_id": "D01",
+        "priority": "P0",
+        "problem": "仓库为私有状态，搜索引擎无法抓取，GitHub 搜索也不会索引私有仓库。",
+        "suggestion": "若项目面向开源社区或希望获得 SEO/AEO 曝光，必须在 Settings 中将 Visibility 改为 Public。若仍处于开发阶段，可先用 Token 本地体检，待内容就绪后公开。",
+        "reason": "GitHub 搜索和外部搜索引擎仅对 Public 仓库建立索引，私有仓库无法获得任何自然流量。",
+        "example": "仓库 Settings → General → Danger Zone → Change repository visibility → Public",
+        "impact": {
+          "dimensions": [
+            "discoverability"
+          ],
+          "expected_gain": "+15~20 分，解锁搜索引擎收录与 GitHub 搜索可见性"
+        }
+      },
+      {
+        "rule_id": "M02",
+        "priority": "P0",
+        "problem": "Description 核心关键词未前置，当前描述为'GitHub 项目搜索优化（原生搜索 + AI 大模型检索曝光，AEO）'，'GitHub' 已前置但核心能力词分散。",
+        "suggestion": "将最核心的搜索优化能力词移至句首，采用英文优先格式，控制在 350 字符内，突出工具属性和目标场景。",
+        "reason": "GitHub Description 是搜索引擎结果页（SERP）和仓库卡片的主要展示文案，前置核心词提升点击率与语义匹配。",
+        "example": "AI-powered GitHub repo SEO & AEO optimization tool. Enhances discoverability via native search + LLM-based retrieval. Open-source project ranking engine.",
+        "impact": {
+          "dimensions": [
+            "readme",
+            "metadata"
+          ],
+          "expected_gain": "+1~1.5 分，提升 SERP 点击率"
+        }
+      },
+      {
+        "rule_id": "M03",
+        "priority": "P0",
+        "problem": "Topics 为空，仓库无法通过 GitHub Topic 标签系统被检索，也影响搜索引擎语义理解。",
+        "suggestion": "添加 6~12 个精准 Topic，覆盖大类、技术栈和场景长尾关键词，避免泛化前缀。",
+        "reason": "GitHub Topics 是仓库分类的核心信号，直接影响站内搜索排名和相关仓库推荐。",
+        "example": "github-search, seo-tools, aeo, llm-search, open-source, python, automation, search-optimization, repository-ranking, ai-search, developer-tools",
+        "impact": {
+          "dimensions": [
+            "metadata",
+            "discoverability"
+          ],
+          "expected_gain": "+4~5 分，提升站内搜索和关联推荐曝光"
+        }
+      },
+      {
+        "rule_id": "M04",
+        "priority": "P2",
+        "problem": "主语言未识别，原因可能是仓库无代码文件或语言分布过少，GitHub 无法自动检测。",
+        "suggestion": "提交至少一个有效的源代码文件（如 src/main.py 或 index.js），确保 GitHub Language 统计能正确识别主语言。",
+        "reason": "Language 字段是仓库分类和搜索过滤的重要元数据，也影响 AEO 实体识别。",
+        "example": "git touch src/main.py && echo 'print(\"RepoRadar\")' > src/main.py && git add . && git commit -m \"chore: add entry file\"",
+        "impact": {
+          "dimensions": [
+            "metadata"
+          ],
+          "expected_gain": "+2 分"
+        }
+      },
+      {
+        "rule_id": "M05",
+        "priority": "P2",
+        "problem": "Homepage 未设置，搜索引擎和访问者无法从仓库页跳转到官方文档或演示站。",
+        "suggestion": "在仓库 Settings → Options 的 Website 字段填入官网或 GitHub Pages 地址，格式为 https:// 开头的完整 URL。",
+        "reason": "Homepage 是仓库对外引流的入口，也是搜索引擎验证项目权威性的信号之一。",
+        "example": "https://repo-radar.docs.example.com 或 https://linhaha-ai.github.io/reporadar",
+        "impact": {
+          "dimensions": [
+            "metadata",
+            "discoverability"
+          ],
+          "expected_gain": "+2 分"
+        }
+      },
+      {
+        "rule_id": "R01",
+        "priority": "P0",
+        "problem": "README 缺失，无法传递项目定位、价值主张和核心功能信息。",
+        "suggestion": "创建 README.md，首段需包含：项目名、一句话定位（是什么）、解决的核心痛点、目标用户，字数 ≥60 字符。",
+        "reason": "首段是 GitHub 折叠预览和搜索引擎摘要的主要来源，直接决定点击转化。",
+        "example": "# RepoRadar\n\nAI-powered GitHub repository SEO & AEO optimization toolkit. Helps open-source maintainers improve their project's discoverability through native GitHub search and large-model-based semantic retrieval. Designed for individual developers and small teams who want their repositories to rank higher without manual SEO effort.",
+        "impact": {
+          "dimensions": [
+            "readme"
+          ],
+          "expected_gain": "+5 分"
+        }
+      },
+      {
+        "rule_id": "R02",
+        "priority": "P0",
+        "problem": "README 缺失导致核心关键词（GitHub search, AEO, SEO, LLM retrieval）零覆盖。",
+        "suggestion": "在 README 自然融入核心词 3 次以上，避免堆砌，穿插在功能说明、使用场景和 FAQ 中。",
+        "reason": "关键词密度是语义搜索引擎判断相关性的基础信号。",
+        "example": "# RepoRadar\n\n**RepoRadar** is an open-source **GitHub search optimization** and **AEO (Answer Engine Optimization)** toolkit that helps developers improve repository visibility through both native search indexing and **LLM-based semantic retrieval**. Whether you're optimizing for GitHub's built-in search or AI-powered code discovery platforms, RepoRadar provides actionable insights. It integrates **GitHub search** metadata analysis with AI retrieval pipelines, making **AEO** practical for every open-source project.",
+        "impact": {
+          "dimensions": [
+            "readme",
+            "aeo"
+          ],
+          "expected_gain": "+5 分"
+        }
+      },
+      {
+        "rule_id": "R03",
+        "priority": "P0",
+        "problem": "无快速开始指引和可运行示例，新用户无法在 2 分钟内上手。",
+        "suggestion": "在 README 中添加 Installation 章节（含 pip/npm 安装命令）和 Usage 章节（含带语言标注的代码示例）。",
+        "reason": "快速开始是开发者评估项目是否值得深入的关键路径，直接影响 Star 转化率。",
+        "example": "## Installation\n\n```bash\npip install reporadar\n```\n\n## Quick Start\n\n```python\nfrom reporadar import RepoRadar\n\nradar = RepoRadar(repo=\"linhaha-ai/RepoRadar\")\nscore = radar.analyze()\nprint(f\"SEO Score: {score.overall}\")\nprint(f\"Top Keywords: {score.keywords[:5]}\")\n```",
+        "impact": {
+          "dimensions": [
+            "readme",
+            "aeo"
+          ],
+          "expected_gain": "+5 分"
+        }
+      },
+      {
+        "rule_id": "R04",
+        "priority": "P1",
+        "problem": "README 缺失导致 H1 唯一性、层级连续性和代码块语言标注均不达标。",
+        "suggestion": "创建 README 时使用标准的 H1→H2→H3 层级结构，所有代码块必须带语言标注（如 ```python），确保 TOC 可自动生成。",
+        "reason": "结构化层级是搜索引擎解析内容权重的依据，也提升可读性。",
+        "example": "# RepoRadar\n\n[![PyPI](...)](...) [![GitHub stars](...)](...)\n\n## Overview\n\n...\n\n## Installation\n\n```bash\npip install reporadar\n```\n\n## Usage\n\n```python\nfrom reporadar import RepoRadar\n...\n```\n\n## Features\n\n- ...\n\n## FAQ\n\n...",
+        "impact": {
+          "dimensions": [
+            "readme"
+          ],
+          "expected_gain": "+5 分"
+        }
+      },
+      {
+        "rule_id": "R05",
+        "priority": "P1",
+        "problem": "README 缺失导致无 FAQ、使用场景或限制说明，搜索引擎无法提取 AEO 结构化内容。",
+        "suggestion": "在 README 末尾添加 FAQ 或 Use Cases 章节，回答潜在用户最常见的 3~5 个问题。",
+        "reason": "FAQ 内容会被搜索引擎直接提取为精选摘要（Featured Snippet），显著提升 AEO 效果。",
+        "example": "## FAQ\n\n**Q: Does RepoRadar support non-Python projects?**\nA: Yes. RepoRadar analyzes repository metadata, README content, and topics regardless of the primary language.\n\n**Q: How is this different from GitHub's built-in search?**\nA: GitHub search relies on exact keyword matching. RepoRadar combines native search signals with LLM-based semantic retrieval for better AEO coverage.\n\n**Q: What are the limitations?**\nA: Private repositories are not analyzed. Results are estimates based on public signals only.",
+        "impact": {
+          "dimensions": [
+            "readme",
+            "aeo"
+          ],
+          "expected_gain": "+5 分"
+        }
+      },
+      {
+        "rule_id": "A01",
+        "priority": "P0",
+        "problem": "README 缺失导致项目实体名称和技术栈无法被搜索引擎明确识别。",
+        "suggestion": "在 README 首段首句明确写出项目名 \"RepoRadar\"，并在第二段说明技术栈（如 Python、LLM API、GitHub API）。",
+        "reason": "实体清晰度是 AEO 的基础，搜索引擎需要明确知道\"这是什么\"才能建立知识图谱关联。",
+        "example": "# RepoRadar\n\n**RepoRadar** is a Python-based open-source toolkit for GitHub repository SEO and AEO (Answer Engine Optimization). It integrates the GitHub REST API and LLM-powered semantic analysis to generate actionable optimization reports. Built with Python 3.10+, it supports both CLI and programmatic usage.",
+        "impact": {
+          "dimensions": [
+            "aeo"
+          ],
+          "expected_gain": "+4 分"
+        }
+      },
+      {
+        "rule_id": "A02",
+        "priority": "P1",
+        "problem": "README 缺失导致无 Use Cases / 适用场景段落，搜索引擎无法判断项目的目标人群和应用领域。",
+        "suggestion": "在 README 中添加 ### Use Cases 章节，描述 3 个典型应用场景。",
+        "reason": "使用场景段落帮助搜索引擎理解项目的适用边界，提升长尾关键词的匹配精度。",
+        "example": "## Use Cases\n\n- **Open-source maintainers** who want to improve their repository's ranking in GitHub search and AI code discovery tools.\n- **Developer advocacy teams** optimizing project pages before community launches or conference presentations.\n- **Technical writers** auditing README quality and keyword coverage before public release.",
+        "impact": {
+          "dimensions": [
+            "aeo"
+          ],
+          "expected_gain": "+4 分"
+        }
+      },
+      {
+        "rule_id": "A03",
+        "priority": "P1",
+        "problem": "README 缺失导致无代码示例和功能清单，无法形成可引用的事实内容。",
+        "suggestion": "添加 Features 章节列出核心功能点，并配合完整的代码示例供用户复制使用。",
+        "reason": "代码示例和功能清单是可被其他文章引用和链接的内容资产，是 AEO 的核心素材。",
+        "example": "## Features\n\n- Auto-extract and analyze repository keywords from README and metadata\n- Score SEO health across 6 dimensions (readme, metadata, aeo, discoverability, health, activity)\n- Generate AEO-friendly FAQ and use-case content suggestions\n- Integrate with GitHub API for real-time topic and language detection\n\n```python\nfrom reporadar import RepoRadar\nradar = RepoRadar(repo=\"owner/repo\")\nreport = radar.scan()\nreport.to_markdown()  # saves report.md\n```",
+        "impact": {
+          "dimensions": [
+            "aeo"
+          ],
+          "expected_gain": "+4 分"
+        }
+      },
+      {
+        "rule_id": "A04",
+        "priority": "P1",
+        "problem": "README 缺失导致无结构化 H2 章节和列表/表格，搜索引擎无法解析内容的语义层次。",
+        "suggestion": "构建至少 5 个 H2 章节（Overview / Installation / Usage / Features / FAQ），配合列表和表格组织内容。",
+        "reason": "H2 层级结构是搜索引擎判断内容权威性和覆盖度的重要信号。",
+        "example": "## Overview\n- What RepoRadar does\n- Target users\n\n## Installation\n- pip install reporadar\n- Requirements: Python ≥3.10\n\n## Usage\n```python\nfrom reporadar import RepoRadar\n...\n```\n\n## Features\n| Feature | Description |\n|---------|-------------|\n| Keyword Analysis | Extract top keywords from README |\n| SEO Scoring | 6-dimension health report |\n| AEO Suggestions | AI-generated FAQ and use cases |\n\n## FAQ\n- Q1...\n- Q2...",
+        "impact": {
+          "dimensions": [
+            "aeo"
+          ],
+          "expected_gain": "+4 分"
+        }
+      },
+      {
+        "rule_id": "A05",
+        "priority": "P1",
+        "problem": "README 缺失导致无限制说明，可能被搜索引擎判定为夸大宣传而降低可信度。",
+        "suggestion": "在 README 末尾添加 ### Limitations 或 ### Compatibility 章节，诚实说明项目的边界。",
+        "reason": "限制说明提升内容可信度，避免搜索引擎因\"过度承诺\"而降低排名。",
+        "example": "## Limitations\n\n- Only analyzes **public** GitHub repositories; private repos require API token and local scanning only.\n- SEO scores are estimates based on public signals and do not guarantee GitHub search ranking improvements.\n- LLM-based AEO suggestions require an OpenAI-compatible API key and may incur usage fees.",
+        "impact": {
+          "dimensions": [
+            "aeo"
+          ],
+          "expected_gain": "+4 分"
+        }
+      },
+      {
+        "rule_id": "D05",
+        "priority": "P1",
+        "problem": "README 缺失导致无有效内外部链接，无法形成链接锚点和外部引用资产。",
+        "suggestion": "在 README 中添加指向文档站、演示 Demo 和 Issue 追踪器的链接，格式为 `[label](https://...)`。",
+        "reason": "有效链接是搜索引擎发现关联内容和验证项目活跃度的重要信号。",
+        "example": "[Documentation](https://repo-radar.docs.example.com) | [Live Demo](https://reporadar-demo.example.com) | [Issues](https://github.com/linhaha-ai/RepoRadar/issues) | [Contributing](./CONTRIBUTING.md)",
+        "impact": {
+          "dimensions": [
+            "discoverability"
+          ],
+          "expected_gain": "+3 分"
+        }
+      },
+      {
+        "rule_id": "H02",
+        "priority": "P1",
+        "problem": "无 CI 配置，无法自动运行测试和代码检查，影响项目可信度。",
+        "suggestion": "添加 GitHub Actions workflow，在 push 和 PR 时自动运行 lint 和 test。",
+        "reason": "CI 状态是贡献者和搜索引擎判断项目活跃度和质量的重要信号。",
+        "example": ".github/workflows/ci.yml:\nname: CI\non: [push, pull_request]\njobs:\n  test:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - uses: actions/setup-python@v5\n        with:\n          python-version: '3.11'\n      - run: pip install -e '.[dev]'\n      - run: pytest tests/ -q",
+        "impact": {
+          "dimensions": [
+            "health"
+          ],
+          "expected_gain": "+2 分"
+        }
+      },
+      {
+        "rule_id": "H03",
+        "priority": "P1",
+        "problem": "无 tests/ 目录或测试配置，无法验证功能正确性。",
+        "suggestion": "创建 tests/ 目录并添加最小单元测试（至少覆盖核心函数）。",
+        "reason": "测试覆盖是项目可维护性和贡献者信任度的基础指标。",
+        "example": "tests/__init__.py\ntests/test_core.py:\nimport pytest\nfrom reporadar import RepoRadar\n\ndef test_repo_radar_init():\n    radar = RepoRadar(repo=\"test/repo\")\n    assert radar.repo == \"test/repo\"\n\ndef test_analyze_returns_dict():\n    radar = RepoRadar(repo=\"test/repo\")\n    result = radar.analyze()\n    assert isinstance(result, dict)",
+        "impact": {
+          "dimensions": [
+            "health"
+          ],
+          "expected_gain": "+2 分"
+        }
+      },
+      {
+        "rule_id": "H04",
+        "priority": "P2",
+        "problem": "无 Release，无法通过语义化版本追踪项目进展。",
+        "suggestion": "创建 v0.1.0 Release，写明版本变更说明，使用语义化版本号。",
+        "reason": "Release 是项目成熟度和版本稳定性的外在信号，也方便用户锁定版本。",
+        "example": "Release v0.1.0 (Initial Release)\n- Initial implementation of RepoRadar core scanner\n- SEO health scoring across 6 dimensions\n- AEO-friendly FAQ and use-case suggestion engine\n- GitHub API integration for metadata analysis",
+        "impact": {
+          "dimensions": [
+            "health",
+            "activity"
+          ],
+          "expected_gain": "+2 分"
+        }
+      },
+      {
+        "rule_id": "H05",
+        "priority": "P2",
+        "problem": "无包元信息文件，无法被 pip/PyPI 等包管理器识别和安装。",
+        "suggestion": "添加 pyproject.toml，填写 name、description、keywords、dependencies 等必要字段。",
+        "reason": "包元信息是 Python 生态分发的基础，也影响搜索引擎对项目属性的理解。",
+        "example": "pyproject.toml:\n[build-system]\nrequires = [\"setuptools>=68\"]\nbuild-backend = \"setuptools.backends._legacy:_Backend\"\n\n[project]\nname = \"reporadar\"\nversion = \"0.1.0\"\ndescription = \"AI-powered GitHub repo SEO & AEO optimization toolkit\"\nkeywords = [\"github\", \"seo\", \"aeo\", \"search-optimization\", \"llm\"]\nrequires-python = \">=3.10\"\ndependencies = [\n    \"requests>=2.28\",\n    \"pydantic>=2.0\",\n]\n\n[project.optional-dependencies]\ndev = [\"pytest>=7.0\", \"black\", \"ruff\"]",
+        "impact": {
+          "dimensions": [
+            "health"
+          ],
+          "expected_gain": "+2 分"
+        }
+      },
+      {
+        "rule_id": "AC03",
+        "priority": "P2",
+        "problem": "180 天内无 Release，项目活跃度信号不足。",
+        "suggestion": "结合 H04，发布首个语义化 Release 并注明日期，后续按节奏更新。",
+        "reason": "Release 记录是项目时间线和活跃度的可视化证据。",
+        "example": "git tag v0.1.0 && git push origin v0.1.0\ngithub-release create --repo linhaha-ai/RepoRadar --tag v0.1.0 --name \"v0.1.0 Initial Release\" --body-file RELEASE.md",
+        "impact": {
+          "dimensions": [
+            "activity"
+          ],
+          "expected_gain": "+2 分"
+        }
+      },
+      {
+        "rule_id": "AC04",
+        "priority": "P2",
+        "problem": "仅 1 名贡献者且无 CONTRIBUTING.md，协作入口缺失。",
+        "suggestion": "添加 CONTRIBUTING.md，说明本地开发环境搭建、提 PR 流程和代码规范。",
+        "reason": "贡献指南降低新贡献者门槛，提升项目可持续性和社区感知。",
+        "example": "CONTRIBUTING.md:\n## Contributing\n\nWe welcome contributions! Here's how to get started:\n\n1. Fork the repo and clone locally\n2. Create a virtualenv: `python -m venv .venv && source .venv/bin/activate`\n3. Install dev dependencies: `pip install -e '.[dev]'`\n4. Run tests: `pytest tests/`\n5. Create a feature branch, commit changes, and open a PR\n\nPlease follow [PEP 8](https://peps.python.org/pep-0008/) style guidelines.",
+        "impact": {
+          "dimensions": [
+            "activity"
+          ],
+          "expected_gain": "+1 分"
+        }
+      }
+    ]
+  }
+}

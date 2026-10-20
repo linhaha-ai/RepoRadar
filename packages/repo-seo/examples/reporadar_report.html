@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>linhaha-ai/RepoRadar · 仓库可发现性评分报告</title>
+<style>
+:root{--ink:#0f172a;--muted:#64748b;--line:#e2e8f0;--bg:#f8fafc;--card:#fff;
+--brand:#2563eb;--ok:#16a34a;--warn:#d97706;--bad:#dc2626;--na:#94a3b8;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+background:var(--bg);color:var(--ink);line-height:1.6;padding:32px 16px;}
+.wrap{max-width:960px;margin:0 auto;}
+header.card{background:var(--card);border:1px solid var(--line);border-radius:14px;
+padding:28px 32px;box-shadow:0 1px 3px rgba(15,23,42,.06);}
+.repo{font-size:14px;color:var(--muted);}
+.repo b{color:var(--ink);font-size:18px;}
+.tag{display:inline-block;font-size:12px;padding:2px 10px;border-radius:999px;
+background:#dbeafe;color:#1d4ed8;margin-left:8px;vertical-align:2px;}
+.tag.priv{background:#fee2e2;color:#b91c1c;}
+.score-row{display:flex;align-items:baseline;gap:14px;margin-top:14px;flex-wrap:wrap;}
+.big{font-size:56px;font-weight:700;letter-spacing:-1px;}
+.big small{font-size:18px;color:var(--muted);font-weight:400;}
+.note{font-size:13px;color:var(--muted);margin-top:6px;}
+h2{font-size:17px;margin:28px 0 12px;padding-left:10px;border-left:4px solid var(--brand);}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 22px;margin-bottom:12px;}
+.dim{display:grid;grid-template-columns:180px 1fr 90px;align-items:center;gap:14px;padding:9px 0;
+border-bottom:1px dashed var(--line);font-size:14px;}
+.dim:last-child{border-bottom:none;}
+.bar{background:#eef2f7;border-radius:6px;height:12px;overflow:hidden;}
+.bar i{display:block;height:100%;background:var(--brand);border-radius:6px;}
+.bar i.ok{background:var(--ok);} .bar i.warn{background:var(--warn);} .bar i.bad{background:var(--bad);}
+.dim .pts{text-align:right;color:var(--muted);font-variant-numeric:tabular-nums;}
+.issue{padding:12px 0;border-bottom:1px dashed var(--line);}
+.issue:last-child{border-bottom:none;}
+.pri{display:inline-block;font-size:11px;font-weight:600;padding:1px 8px;border-radius:4px;margin-right:6px;}
+.p0{background:#fee2e2;color:#b91c1c;} .p1{background:#fef3c7;color:#92400e;} .p2{background:#e2e8f0;color:#334155;}
+.ev{color:var(--muted);font-size:13px;margin-top:3px;}
+.sug{margin-top:3px;font-size:14px;}
+.advice{padding:12px 0;border-bottom:1px dashed var(--line);}
+.advice:last-child{border-bottom:none;}
+table{width:100%;border-collapse:collapse;font-size:13.5px;background:var(--card);
+border:1px solid var(--line);border-radius:12px;overflow:hidden;}
+th,td{text-align:left;padding:9px 14px;border-bottom:1px solid var(--line);vertical-align:top;}
+th{background:#f1f5f9;font-weight:600;white-space:nowrap;}
+tr:last-child td{border-bottom:none;}
+code{background:#f1f5f9;border-radius:4px;padding:1px 6px;font-size:12.5px;}
+footer{margin-top:28px;font-size:12px;color:var(--muted);text-align:center;}
+@media print{body{background:#fff;padding:0;} .card,header.card{box-shadow:none;break-inside:avoid;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="card">
+  <div class="repo"><b>linhaha-ai/RepoRadar</b>
+    <span class="tag priv">私有</span>
+    <span class="tag">main</span>
+    <span class="tag">Apache-2.0</span>
+  </div>
+  <div class="score-row">
+    <div class="big">16.5<small>&nbsp;/ 100</small></div>
+    <div>
+      <b>仓库可发现性评分</b>（Repository Discoverability Score）
+      <div class="note">总分代表优化准备度，不代表真实搜索排名；静态审计 ≠ 真实曝光</div>
+    </div>
+  </div>
+</header>
+
+<h2>维度得分</h2>
+<div class="card"><div class="dim">
+  <div>README 内容质量</div>
+  <div class="bar"><i class="bad" style="width:0%"></i></div>
+  <div class="pts">0.0 / 25.0</div>
+</div>
+<div class="dim">
+  <div>仓库元数据</div>
+  <div class="bar"><i class="warn" style="width:42%"></i></div>
+  <div class="pts">8.5 / 20.0</div>
+</div>
+<div class="dim">
+  <div>AI 检索准备度</div>
+  <div class="bar"><i class="bad" style="width:0%"></i></div>
+  <div class="pts">0.0 / 20.0</div>
+</div>
+<div class="dim">
+  <div>搜索可发现性 <span style="font-size:12px;color:var(--na)">（可评分 6）</span></div>
+  <div class="bar"><i class="bad" style="width:0%"></i></div>
+  <div class="pts">0.0 / 6.0</div>
+</div>
+<div class="dim">
+  <div>工程健康与可信度</div>
+  <div class="bar"><i class="bad" style="width:20%"></i></div>
+  <div class="pts">2.0 / 10.0</div>
+</div>
+<div class="dim">
+  <div>项目活跃度 <span style="font-size:12px;color:var(--na)">（可评分 7）</span></div>
+  <div class="bar"><i class="warn" style="width:57%"></i></div>
+  <div class="pts">4.0 / 7.0</div>
+</div></div>
+
+<h2>最优先修复的问题</h2>
+<div class="card"><div class="issue">
+  <span class="pri p0">P0</span><b>1. Topics</b>
+  <span style="color:var(--muted);font-size:13px">（metadata 维度，扣 6.0 分）</span>
+  <div class="ev">证据：Topics 为空</div>
+  <div class="sug">建议：添加 6~12 个精准标签（大类 + 技术栈 + 场景长尾）</div>
+</div>
+<div class="issue">
+  <span class="pri p0">P0</span><b>2. 项目定位与价值主张</b>
+  <span style="color:var(--muted);font-size:13px">（readme 维度，扣 5.0 分）</span>
+  <div class="ev">证据：README 缺失或首段为空</div>
+  <div class="sug">建议：在 H1 标题后补充一段：项目是什么 + 解决什么问题 + 目标用户</div>
+</div>
+<div class="issue">
+  <span class="pri p0">P0</span><b>3. 关键词与语义覆盖</b>
+  <span style="color:var(--muted);font-size:13px">（readme 维度，扣 5.0 分）</span>
+  <div class="ev">证据：README 缺失</div>
+  <div class="sug">建议：先创建 README</div>
+</div></div>
+
+<h2>优化建议（AI 生成）</h2>
+<div class="card"><div class="advice">
+  <span class="pri p0">P0</span><b>R01 · README 缺失，项目定位与价值主张无法传递</b>
+  <div class="sug">建议：立即创建 README.md，首段必须包含：项目名称 + 核心功能（GitHub 搜索 + AI 大模型检索）+ 解决什么问题（AEO 曝光不足）+ 目标用户（开源项目维护者、SEO 从业者）</div>
+  <div class="ev">示例：<code># RepoRadar
+
+RepoRadar 是开源项目的搜索引擎优化（AEO）体检与曝光优化工具。帮助开发者通过结构化 README 与 metadata 诊断，提升项目在 GitHub 搜索、Google Web Search 及 AI 大模型检索中的可见度。
+
+## 适用场景
+- 开源项目上架前的 SEO/AEO 自检
+- 项目 README 内容审计与关键词覆盖优化
+- 多语言（中文/英文）技术栈项目的公开化准备</code></div>
+</div>
+<div class="advice">
+  <span class="pri p0">P0</span><b>R02 · README 缺失，核心关键词（AEO、GitHub 搜索、AI 大模型检索）无法自然出现</b>
+  <div class="sug">建议：在创建的 README 中自然嵌入核心词 ≥3 次：&#x27;AEO&#x27;、&#x27;GitHub 搜索&#x27;、&#x27;AI 大模型检索&#x27;，避免堆砌，穿插在功能说明与使用场景中</div>
+  <div class="ev">示例：<code>RepoRadar 专注于 **AEO**（Artificial Intelligence Engine Optimization）领域，解决开源项目在 GitHub 搜索与 AI 大模型检索中的曝光痛点。通过关键词覆盖、语义结构与快速开始示例的自动化审计，帮助项目从&#x27;可见&#x27;走向&#x27;可被发现&#x27;。</code></div>
+</div>
+<div class="advice">
+  <span class="pri p0">P0</span><b>R03 · README 缺失，无可复制安装命令与代码示例</b>
+  <div class="sug">建议：在 README 中添加 &#x27;快速开始&#x27; H2 章节，包含 pip/npm/go install 命令 + Python/TypeScript 示例代码块</div>
+  <div class="ev">示例：<code>## 快速开始
+
+```bash
+# 使用 pip 安装
+pip install reporadar
+
+# 或使用 npm
+npm install @reporadar/core
+```
+
+```python
+from reporadar import audit
+result = audit(&#x27;your-repo&#x27;)
+print(f&#x27;AEO Score: {result.score}/100&#x27;)
+```</code></div>
+</div>
+<div class="advice">
+  <span class="pri p1">P1</span><b>R04 · README 缺失，H1 唯一性、层级连续、代码块语言标注等结构规范无法验证</b>
+  <div class="sug">建议：创建 README 时确保：H1 只有一个（# RepoRadar）、H2 章节连续、所有代码块标注语言（python/bash/toml）</div>
+  <div class="ev">示例：<code># RepoRadar
+
+## 功能
+- README 体检
+- metadata 诊断
+
+## 安装
+```bash
+pip install reporadar
+```</code></div>
+</div>
+<div class="advice">
+  <span class="pri p1">P1</span><b>R05 · README 缺失，无法提供 FAQ/使用场景/限制说明等 AEO 友好内容</b>
+  <div class="sug">建议：在 README 末尾添加 FAQ 或 &#x27;已知限制&#x27; 章节，提升 AI 模型引用时的可回答性与可信度</div>
+  <div class="ev">示例：<code>## FAQ
+
+**Q: RepoRadar 支持哪些语言？**
+A: 目前支持 Python、TypeScript、Go 项目，未来将扩展至 Rust、Java。
+
+**Q: 体检结果多久更新一次？**
+A: 实时扫描，无缓存延迟。
+
+## 已知限制
+- 私有仓库需设置 `--private` 标志并传入 Token</code></div>
+</div>
+<div class="advice">
+  <span class="pri p0">P0</span><b>M02 · Description 核心词未前置，当前为&#x27;GitHub 项目搜索优化...&#x27;，&#x27;AEO&#x27;被埋没</b>
+  <div class="sug">建议：将 Description 重写为：&#x27;AEO 开源项目体检工具 — GitHub 搜索 + AI 大模型检索曝光优化&#x27;</div>
+  <div class="ev">示例：<code>AEO 开源项目体检工具 — GitHub 搜索 + AI 大模型检索曝光优化，帮助开发者提升开源项目在搜索引擎与 LLM 中的可见度。</code></div>
+</div>
+<div class="advice">
+  <span class="pri p0">P0</span><b>M03 · Topics 为空，无法通过标签被搜索发现</b>
+  <div class="sug">建议：添加 6~12 个精准标签，覆盖大类（opensource、seo）、技术栈（python、typescript）、场景长尾（aeo、github-search）</div>
+  <div class="ev">示例：<code>aeo, github-search, open-source, seo-tools, ai-models, python, typescript, developer-tools, metadata-audit, visibility-optimization, search-exposure, readme-audit</code></div>
+</div>
+<div class="advice">
+  <span class="pri p2">P2</span><b>M04 · 主语言未识别，仓库无代码提交导致 GitHub 无法判定</b>
+  <div class="sug">建议：提交至少一个代码文件（如 src/main.py 或 index.ts）让 GitHub 识别主语言</div>
+  <div class="ev">示例：<code>创建 `src/main.py` 或 `index.ts` 等入口文件，即使只是空函数定义，也能让 GitHub 识别为 Python/TypeScript 项目。</code></div>
+</div>
+<div class="advice">
+  <span class="pri p2">P2</span><b>M05 · Homepage 未设置，无官网或演示链接</b>
+  <div class="sug">建议：在仓库 Settings 的 Website 填入 GitHub Pages 地址（https://linhaha-ai.github.io/reporadar）</div>
+  <div class="ev">示例：<code>仓库 → Settings → Pages → Source: main branch /docs
+Settings → About → Website: https://linhaha-ai.github.io/reporadar</code></div>
+</div>
+<div class="advice">
+  <span class="pri p0">P0</span><b>A01 · README 缺失，实体与项目身份清晰度为零</b>
+  <div class="sug">建议：创建 README 后，首段必须包含项目名 &#x27;RepoRadar&#x27; 且明确技术栈（Python/TypeScript + AI 大模型）</div>
+  <div class="ev">示例：<code># RepoRadar
+
+基于 Python 与 LLM API 的 AEO（Artificial Intelligence Engine Optimization）体检工具，专为开源项目设计。</code></div>
+</div>
+<div class="advice">
+  <span class="pri p1">P1</span><b>A02 · README 缺失，功能与适用场景无法表达</b>
+  <div class="sug">建议：在 README 中添加 &#x27;Use Cases&#x27; 或 &#x27;适用场景&#x27; H2 章节，说明项目解决的 3~5 个具体问题</div>
+  <div class="ev">示例：<code>## Use Cases
+
+1. 开源项目上架前的 README 健康度自检
+2. 提升项目在 Google 与 GitHub 搜索中的关键词排名
+3. 为 AI 大模型（Claude/GPT）提供结构化、可引用的项目描述</code></div>
+</div>
+<div class="advice">
+  <span class="pri p1">P1</span><b>A03 · README 缺失，无可引用的事实与代码示例</b>
+  <div class="sug">建议：添加&#x27;功能清单&#x27;表格 + 至少一个带语言标注的代码示例</div>
+  <div class="ev">示例：<code>| 功能 | 说明 |
+|------|------|
+| README 体检 | 扫描 R01-H05 共 23 项检查 |
+| 关键词覆盖 | 自动检测核心词出现次数 |
+
+```python
+from reporadar import scan
+result = scan(&#x27;my-project&#x27;)
+```</code></div>
+</div>
+<div class="advice">
+  <span class="pri p1">P1</span><b>A04 · README 缺失，无法提供结构化章节与列表/表格组织</b>
+  <div class="sug">建议：创建 README 时使用 H2 章节 ≥3 个，包含功能清单表格、安装步骤列表、FAQ 问答表</div>
+  <div class="ev">示例：<code>## 功能
+- 实时体检
+- 自动生成建议
+
+## 安装
+- pip install
+- npm install
+
+## 对比
+| 维度 | RepoRadar | 手动检查 |
+|------|-----------|----------|
+| 速度 | 5s | 30min |
+| 覆盖 | 23 项 | 不确定 |</code></div>
+</div>
+<div class="advice">
+  <span class="pri p1">P1</span><b>A05 · README 缺失，无法提供信息一致性与限制说明</b>
+  <div class="sug">建议：在 README 末尾添加&#x27;已知限制&#x27;或&#x27;兼容性说明&#x27;章节，避免夸大词（如&#x27;最强大&#x27;&#x27;唯一&#x27;）</div>
+  <div class="ev">示例：<code>## 已知限制
+- 仅支持 GitHub 仓库，GitLab 暂不支持
+- 私有仓库需要手动传入 Token
+
+## 兼容性
+- Python 3.8+
+- Node.js 16+</code></div>
+</div>
+<div class="advice">
+  <span class="pri p0">P0</span><b>D01 · 仓库为私有，完全无法被外部搜索引擎抓取</b>
+  <div class="sug">建议：将仓库设为 Public；若为内部工具，用 Token 本地体检即可，无需公开</div>
+  <div class="ev">示例：<code>仓库 → Settings → Danger Zone → Change visibility → Public
+（开发期可用 `--private` 模式本地运行体检，不影响结果）</code></div>
+</div>
+<div class="advice">
+  <span class="pri p1">P1</span><b>D05 · README 缺失，无有效内外部链接</b>
+  <div class="sug">建议：创建 README 后添加文档站链接（GitHub Pages）、示例仓库链接、Issue 模板链接</div>
+  <div class="ev">示例：<code>[文档](https://linhaha-ai.github.io/reporadar/docs)
+[示例项目](https://github.com/linhaha-ai/reporadar-example)
+[提交 Issue](https://github.com/linhaha-ai/reporadar/issues/new)</code></div>
+</div>
+<div class="advice">
+  <span class="pri p1">P1</span><b>H02 · 无 CI 配置，代码质量与发布流程缺乏自动化</b>
+  <div class="sug">建议：添加 `.github/workflows/ci.yml`，配置 lint + test 步骤，PR 时自动触发</div>
+  <div class="ev">示例：<code>.github/workflows/ci.yml:
+```yaml
+name: CI
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install -e .
+      - run: pytest tests/ -v
+```</code></div>
+</div>
+<div class="advice">
+  <span class="pri p1">P1</span><b>H03 · 无测试目录与测试配置</b>
+  <div class="sug">建议：创建 `tests/` 目录，添加至少 1 个最小单元测试（如测试关键词计数逻辑）</div>
+  <div class="ev">示例：<code>tests/test_keywords.py:
+```python
+from reporadar.keywords import count
+
+def test_count():
+    assert count(&#x27;AEO&#x27;, &#x27;AEO is great&#x27;) == 1
+```</code></div>
+</div>
+<div class="advice">
+  <span class="pri p2">P2</span><b>H04 · 无 Release，版本管理缺失</b>
+  <div class="sug">建议：发布 v0.1.0 Release，写清语义化版本说明（Initial release with core audit）</div>
+  <div class="ev">示例：<code>GitHub → Releases → Draft new release
+Tag: v0.1.0
+Title: Initial Release
+Body: First release of RepoRadar with README audit and metadata diagnosis.</code></div>
+</div>
+<div class="advice">
+  <span class="pri p2">P2</span><b>H05 · 无包元信息文件，依赖与安装信息缺失</b>
+  <div class="sug">建议：根据主语言添加对应包文件：Python 用 pyproject.toml，Node.js 用 package.json</div>
+  <div class="ev">示例：<code>pyproject.toml:
+```toml
+[project]
+name = &#x27;reporadar&#x27;
+version = &#x27;0.1.0&#x27;
+description = &#x27;AEO 开源项目体检工具&#x27;
+keywords = [&#x27;aeo&#x27;, &#x27;seo&#x27;, &#x27;github&#x27;]
+```</code></div>
+</div>
+<div class="advice">
+  <span class="pri p2">P2</span><b>AC03 · 180 天内无 Release，版本更新活动为零</b>
+  <div class="sug">建议：发布语义化版本 v0.1.0 并写 Release Notes，之后每 30 天推送一个小版本</div>
+  <div class="ev">示例：<code>发布 v0.1.0，之后每周二推送 patch（v0.1.1、v0.1.2），保持月均 1~2 个 Release。</code></div>
+</div>
+<div class="advice">
+  <span class="pri p2">P2</span><b>AC04 · 贡献者仅 1 人且无 CONTRIBUTING 文件，协作门槛高</b>
+  <div class="sug">建议：添加 CONTRIBUTING.md 说明本地设置、PR 流程、代码规范，或邀请 1~2 名协作者</div>
+  <div class="ev">示例：<code>CONTRIBUTING.md:
+```
+## 本地设置
+pip install -e &#x27;.[dev]&#x27;
+
+## 提交 PR
+1. Fork 本仓库
+2. 创建 feature 分支
+3. 运行 pytest tests/ 通过
+4. 提交 Pull Request
+```</code></div>
+</div></div>
+
+<h2>扣分项证据清单</h2>
+<table><thead><tr><th>规则</th><th>检查项 / 证据 / 原因</th><th>得分</th></tr></thead>
+<tbody><tr><td><b>R01</b></td><td>项目定位与价值主张<div class='ev'>README 缺失或首段为空</div><div class='ev'>AI 与 GitHub 搜索把 README 首段当作项目定位的第一信息源</div><br><code>RepoRadar is a CLI tool that scans any GitHub repo and reports its search &amp; AI discoverability issues with actionable fixes.</code></td><td>0.0 / 5</td></tr>
+<tr><td><b>R02</b></td><td>关键词与语义覆盖<div class='ev'>README 缺失</div><div class='ev'>无内容可供关键词匹配</div></td><td>0.0 / 5</td></tr>
+<tr><td><b>R03</b></td><td>快速开始与使用示例<div class='ev'>README 缺失</div><div class='ev'>无安装/示例内容</div></td><td>0.0 / 5</td></tr>
+<tr><td><b>R04</b></td><td>内容结构与链接完整性<div class='ev'>README 缺失</div><div class='ev'>无结构可言</div></td><td>0.0 / 5</td></tr>
+<tr><td><b>R05</b></td><td>AEO 友好内容<div class='ev'>README 缺失</div><div class='ev'>无 AEO 内容</div></td><td>0.0 / 5</td></tr>
+<tr><td><b>M02</b></td><td>Description<div class='ev'>非空✅；≤350✅；核心词未前置❌；英文为主✅</div><div class='ev'>Description 是 GitHub 搜索摘要、Google 标题与 AI 读取的第一信息来源</div><br><code>Lightweight TypeScript ORM for SQLite, zero dependencies, supports migration and batch insert.</code></td><td>4.5 / 6</td></tr>
+<tr><td><b>M03</b></td><td>Topics<div class='ev'>Topics 为空</div><div class='ev'>无 Topics 时 GitHub 与 AI 无法进行主题归类与相关搜索匹配</div><br><code>typescript, sqlite, orm, database, nodejs, migration, zero-dependency</code></td><td>0.0 / 6</td></tr>
+<tr><td><b>M04</b></td><td>主语言与分类定位<div class='ev'>language 未识别（仓库无代码提交）</div><div class='ev'>无主语言时项目类别定位缺失，相关技术栈搜索无法命中</div></td><td>0.0 / 2</td></tr>
+<tr><td><b>M05</b></td><td>官网/文档/演示链接<div class='ev'>未设置 Homepage</div><div class='ev'>缺少官网/文档/演示入口，用户与 AI 少一个信任与理解通道</div></td><td>0.0 / 2</td></tr>
+<tr><td><b>A01</b></td><td>实体与项目身份清晰度<div class='ev'>README 缺失</div><div class='ev'>AI 无内容可提取身份信息</div></td><td>0.0 / 4</td></tr>
+<tr><td><b>A02</b></td><td>功能与适用场景表达<div class='ev'>README 缺失</div><div class='ev'>无场景表达</div></td><td>0.0 / 4</td></tr>
+<tr><td><b>A03</b></td><td>可引用的事实与示例<div class='ev'>README 缺失</div><div class='ev'>无可引用内容</div></td><td>0.0 / 4</td></tr>
+<tr><td><b>A04</b></td><td>结构化文档与语义组织<div class='ev'>README 缺失</div><div class='ev'>无结构可评估</div></td><td>0.0 / 4</td></tr>
+<tr><td><b>A05</b></td><td>信息一致性与限制说明<div class='ev'>README 缺失</div><div class='ev'>无法评估一致性</div></td><td>0.0 / 4</td></tr>
+<tr><td><b>D01</b></td><td>仓库页面可访问性<div class='ev'>仓库为私有（visibility=private）</div><div class='ev'>私有仓库无法被 GitHub 搜索、Google、AI 爬虫访问，可发现性为 0</div><br><code>Settings → General → Danger Zone → Change visibility → Public</code></td><td>0.0 / 3</td></tr>
+<tr><td><b>D05</b></td><td>内外部链接完整性<div class='ev'>README 缺失</div><div class='ev'>无链接可指引用例/文档，AI 无法通过链接扩展信息</div></td><td>0.0 / 3</td></tr>
+<tr><td><b>H02</b></td><td>CI 与自动化检查<div class='ev'>无 CI 配置</div><div class='ev'>无 CI 表明构建与测试未经自动验证，用户与 AI 信任度下降</div></td><td>0.0 / 2</td></tr>
+<tr><td><b>H03</b></td><td>测试及质量保障<div class='ev'>无测试目录/测试配置</div><div class='ev'>无测试的项目被判定为未验证，影响可信度</div></td><td>0.0 / 2</td></tr>
+<tr><td><b>H04</b></td><td>Release 与版本管理<div class='ev'>无 Release</div><div class='ev'>无版本发布说明项目尚未对外交付，AI 引用时缺乏版本锚点</div></td><td>0.0 / 2</td></tr>
+<tr><td><b>H05</b></td><td>依赖、安装及安全信息<div class='ev'>无包元信息文件（package.json / pyproject.toml 等）</div><div class='ev'>缺少依赖/安装声明，用户无法标准安装，AI 无法解析技术信息</div></td><td>0.0 / 2</td></tr>
+<tr><td><b>AC03</b></td><td>Release 与版本更新<div class='ev'>无 Release</div><div class='ev'>无版本发布节奏，AI 与用户难以确认项目在演进</div></td><td>0.0 / 2</td></tr>
+<tr><td><b>AC04</b></td><td>贡献活动与协作<div class='ev'>贡献者 ×1 且无 CONTRIBUTING</div><div class='ev'>单人项目缺乏协作入口，社区参与度低</div></td><td>1.0 / 2</td></tr></tbody></table>
+<div class="note">注：4 项为不适用/无法检测，已从分母剔除；D02 收录证据需 V2 外部核验。</div>
+
+
+<footer>
+  生成时间：2026-10-19T22:16:06 · 抓取时间：2026-10-19T22:15:06 · RepoRadar（repo-seo）<br>
+  描述：GitHub 项目搜索优化（原生搜索 + AI 大模型检索曝光，AEO）
+</footer>
+
+</div>
+</body>
+</html>

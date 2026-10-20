@@ -1,0 +1,8 @@
+# RepoRadar 自定义配置示例（--config）
+# 演示：禁用结构检查 R04 + 放宽 Topics 数量门槛
+
+[rules.R04]
+enabled = false
+
+[rules.M03]
+params = { min_topics = 3 }

@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RepoRadar · GitHub 仓库可发现性体检</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='44' fill='%232563eb'/%3E%3Ccircle cx='50' cy='50' r='16' fill='%23fff'/%3E%3Cpath d='M50 6a44 44 0 0 1 38 22l-20 11a24 24 0 0 0-18-10z' fill='%23bfdbfe'/%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#0f172a; --muted:#64748b; --line:#e2e8f0; --bg:#f8fafc; --card:#fff;
+  --brand:#2563eb; --brand2:#1d4ed8;
+  --ok:#16a34a; --warn:#d97706; --bad:#dc2626; --na:#64748b;
+  --readme:#2563eb; --metadata:#0891b2; --aeo:#7c3aed;
+  --disco:#d97706; --health:#16a34a; --activity:#dc2626;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  background:var(--bg);color:var(--ink);line-height:1.6;}
+.wrap{max-width:1000px;margin:0 auto;padding:24px 16px 48px;}
+
+/* header */
+header{display:flex;align-items:baseline;gap:14px;padding:8px 0 18px;border-bottom:1px solid var(--line);}
+.brand{font-size:26px;font-weight:800;letter-spacing:-.5px;}
+.brand span{color:var(--brand);}
+.tagline{color:var(--muted);font-size:14px;}
+.badge{margin-left:auto;font-size:12px;color:var(--brand);border:1px solid #bfdbfe;border-radius:999px;padding:2px 10px;background:#eff6ff;}
+
+/* input hero */
+.hero{background:linear-gradient(135deg,#eff6ff,#f8fafc);border:1px solid var(--line);
+  border-radius:16px;padding:26px 28px;margin-top:22px;}
+.hero h2{font-size:19px;margin-bottom:6px;}
+.hero p{color:var(--muted);font-size:13.5px;margin-bottom:16px;}
+.row{display:flex;gap:10px;flex-wrap:wrap;}
+input[type=text]{flex:1;min-width:260px;padding:11px 14px;border:1px solid #cbd5e1;border-radius:10px;
+  font-size:14.5px;outline:none;transition:border .15s;}
+input[type=text]:focus{border-color:var(--brand);box-shadow:0 0 0 3px #dbeafe;}
+.btn{background:var(--brand);color:#fff;border:none;border-radius:10px;padding:11px 24px;
+  font-size:14.5px;font-weight:600;cursor:pointer;transition:background .15s;}
+.btn:hover{background:var(--brand2);}
+.btn:disabled{background:#93c5fd;cursor:not-allowed;}
+.opts{display:flex;gap:18px;margin-top:14px;font-size:13.5px;color:var(--ink);}
+.opts label{display:flex;align-items:center;gap:6px;cursor:pointer;}
+.opts input{accent-color:var(--brand);}
+
+/* spinner */
+.loading{display:none;align-items:center;gap:12px;margin-top:18px;padding:16px 20px;
+  background:#fff;border:1px solid var(--line);border-radius:12px;color:var(--muted);font-size:14px;}
+.spinner{width:20px;height:20px;border:3px solid #dbeafe;border-top-color:var(--brand);border-radius:50%;
+  animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* sections */
+section{display:none;margin-top:22px;}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 24px;margin-bottom:14px;}
+h3{font-size:16px;margin-bottom:12px;padding-left:10px;border-left:4px solid var(--brand);}
+
+/* repo meta */
+.meta{display:flex;flex-wrap:wrap;gap:8px 20px;align-items:center;}
+.repo-name{font-size:18px;font-weight:700;}
+.chip{font-size:12px;border-radius:999px;padding:2px 10px;border:1px solid var(--line);background:#f1f5f9;color:var(--muted);}
+.chip.pub{background:#ecfdf5;color:var(--ok);border-color:#bbf7d0;}
+.chip.pri{background:#fef2f2;color:var(--bad);border-color:#fecaca;}
+.desc{color:var(--muted);font-size:13.5px;margin-top:8px;}
+
+/* score head */
+.score-head{display:flex;align-items:center;gap:26px;flex-wrap:wrap;}
+.score-num{font-size:64px;font-weight:800;letter-spacing:-2px;line-height:1;}
+.score-num small{font-size:20px;color:var(--muted);font-weight:600;}
+.score-sub{color:var(--muted);font-size:13px;}
+.grade{font-size:13px;font-weight:700;border-radius:999px;padding:3px 12px;}
+.grade.good{background:#ecfdf5;color:var(--ok);}
+.grade.mid{background:#fffbeb;color:var(--warn);}
+.grade.low{background:#fef2f2;color:var(--bad);}
+
+/* dims bars */
+.dim{display:flex;align-items:center;gap:12px;margin-bottom:11px;}
+.dim .lbl{width:150px;font-size:13.5px;color:var(--ink);flex-shrink:0;}
+.dim .bar{flex:1;height:12px;background:#eef2f7;border-radius:6px;overflow:hidden;}
+.dim .fill{height:100%;border-radius:6px;transition:width .5s ease;}
+.dim .val{width:120px;font-size:13px;color:var(--muted);text-align:right;flex-shrink:0;}
+
+/* top issues */
+.issue{border:1px solid var(--line);border-radius:10px;padding:13px 16px;margin-bottom:10px;font-size:13.5px;}
+.issue .head{display:flex;gap:10px;align-items:center;margin-bottom:6px;flex-wrap:wrap;}
+.pri{font-size:12px;font-weight:700;border-radius:6px;padding:1px 8px;}
+.pri.P0{background:#fef2f2;color:var(--bad);}
+.pri.P1{background:#fffbeb;color:var(--warn);}
+.pri.P2{background:#eff6ff;color:var(--brand);}
+.rule-id{font-weight:700;font-size:13px;}
+.issue .reason{color:var(--muted);margin:4px 0;}
+.issue .sugg{color:var(--ink);}
+.issue .sugg b{color:var(--ok);font-weight:600;}
+
+/* advice */
+.adv{border:1px solid var(--line);border-radius:10px;padding:12px 16px;margin-bottom:10px;font-size:13.5px;}
+.adv .head{display:flex;gap:8px;align-items:center;margin-bottom:5px;flex-wrap:wrap;}
+.adv .detail{color:var(--muted);}
+.src-badge{font-size:11.5px;border-radius:6px;padding:1px 8px;font-weight:600;}
+.src-badge.ai{background:#f5f3ff;color:#7c3aed;}
+.src-badge.template{background:#f1f5f9;color:var(--muted);}
+.src-badge.mixed{background:#fffbeb;color:var(--warn);}
+
+/* evidence table */
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top;}
+th{background:#f1f5f9;font-weight:600;white-space:nowrap;}
+.st{font-size:12px;font-weight:700;border-radius:6px;padding:1px 8px;white-space:nowrap;}
+.st.PASS{background:#ecfdf5;color:var(--ok);}
+.st.FAIL{background:#fef2f2;color:var(--bad);}
+.st.N_A{background:#f1f5f9;color:var(--na);}
+.st.UNKNOWN{background:#eff6ff;color:var(--brand);}
+.ev{color:var(--muted);font-size:12.5px;}
+details{margin-top:14px;}
+summary{cursor:pointer;font-size:13.5px;color:var(--brand);user-select:none;}
+
+/* verification */
+.ver-item{font-size:13.5px;padding:8px 0;border-bottom:1px dashed var(--line);}
+.ver-item:last-child{border-bottom:none;}
+.note{color:var(--muted);font-size:12.5px;margin-top:10px;}
+
+/* trend */
+.trend-svg{width:100%;height:auto;display:block;}
+
+/* error */
+.error{display:none;margin-top:18px;padding:16px 20px;background:#fef2f2;border:1px solid #fecaca;
+  border-radius:12px;color:var(--bad);font-size:14px;}
+
+footer{margin-top:34px;color:var(--muted);font-size:12px;text-align:center;border-top:1px solid var(--line);padding-top:18px;}
+code{background:#f1f5f9;border-radius:4px;padding:1px 6px;font-size:12.5px;}
+@media(max-width:720px){.dim .lbl{width:110px;} .dim .val{width:92px;} .score-num{font-size:52px;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">Repo<span>Radar</span></div>
+    <div class="tagline">GitHub 仓库可发现性体检 · 原生搜索 + AI 检索曝光（AEO）</div>
+    <div class="badge">v2.2</div>
+  </header>
+
+  <div class="hero">
+    <h2>输入仓库 URL，一键体检</h2>
+    <p>粘贴任意 GitHub 仓库链接（公开或带 <code>GITHUB_TOKEN</code> 的私有），输出 0–100 可发现性评分、逐条证据与优化建议。</p>
+    <div class="row">
+      <input type="text" id="url" placeholder="https://github.com/owner/repo" value="https://github.com/linhaha-ai/RepoRadar">
+      <button class="btn" id="scanBtn">开始体检</button>
+    </div>
+    <div class="opts">
+      <label><input type="checkbox" id="optAi" checked> AI 优化建议</label>
+      <label><input type="checkbox" id="optVerify"> 外部验证（Google 收录 + 模型探测）</label>
+    </div>
+  </div>
+
+  <div class="loading" id="loading"><div class="spinner"></div><span id="loadText">正在抓取仓库数据…</span></div>
+  <div class="error" id="error"></div>
+
+  <section id="result">
+    <div class="card" id="metaCard"></div>
+    <div class="card">
+      <h3>可发现性评分</h3>
+      <div class="score-head">
+        <div class="score-num" id="scoreNum">–</div>
+        <div><div class="grade" id="scoreGrade">–</div>
+        <div class="score-sub" id="scoreSub"></div></div>
+        <div class="score-sub" id="trendInfo" style="margin-left:auto"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>六维度得分</h3>
+      <div id="dims"></div>
+    </div>
+    <div class="card">
+      <h3>最优先修复（Top 3）</h3>
+      <div id="topIssues"></div>
+    </div>
+    <div class="card" id="advCard" style="display:none">
+      <h3>AI 优化建议</h3>
+      <div id="advices"></div>
+    </div>
+    <div class="card" id="verCard" style="display:none">
+      <h3>外部验证证据（Search Visibility Evidence）</h3>
+      <div id="verify"></div>
+    </div>
+    <div class="card" id="trendCard" style="display:none">
+      <h3>历史趋势</h3>
+      <div id="trendChart"></div>
+    </div>
+    <div class="card">
+      <h3>规则证据明细</h3>
+      <div id="evidence"></div>
+      <details><summary>展开全部 29 条规则证据</summary>
+        <div id="evidenceAll" style="margin-top:12px"></div>
+      </details>
+    </div>
+  </section>
+
+  <footer>
+    RepoRadar：静态审计衡量「优化准备度」，不代表真实搜索排名；外部验证为 Search Visibility Evidence，与静态评分分开呈现。<br>
+    免责声明：AEO 模型探测为「训练知识采样，非实时检索」。
+  </footer>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const COLORS = {readme:'#2563eb',metadata:'#0891b2',aeo:'#7c3aed',discoverability:'#d97706',health:'#16a34a',activity:'#dc2626'};
+const DIM_LABELS = {readme:'README 内容质量',metadata:'仓库元数据',aeo:'AI 检索准备度',discoverability:'搜索可发现性',health:'工程健康与可信度',activity:'项目活跃度'};
+
+function el(tag, cls, text){
+  const n = document.createElement(tag);
+  if(cls) n.className = cls;
+  if(text !== undefined && text !== null) n.textContent = text;
+  return n;
+}
+
+function grade(total){
+  if(total >= 70) return ['良好', 'good'];
+  if(total >= 40) return ['待优化', 'mid'];
+  return ['风险高', 'low'];
+}
+
+async function scan(){
+  const url = $('url').value.trim();
+  if(!url){ $('error').textContent = '请输入仓库 URL。'; $('error').style.display = 'block'; return; }
+  $('error').style.display = 'none';
+  $('result').style.display = 'none';
+  $('loading').style.display = 'flex';
+  $('loadText').textContent = '正在抓取仓库数据…';
+  $('scanBtn').disabled = true;
+
+  const steps = ['正在抓取仓库数据…', '正在计算六维度评分…', '正在生成优化建议…', '正在执行外部验证…', '完成'];
+  let step = 0;
+  const t = setInterval(() => { if(step < steps.length-1){ step++; $('loadText').textContent = steps[step]; } }, 2500);
+
+  try{
+    const resp = await fetch('/api/scan', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({url, ai: $('optAi').checked, verify: $('optVerify').checked})
+    });
+    clearInterval(t);
+    const data = await resp.json();
+    if(!resp.ok) throw new Error(data.error || `HTTP ${resp.status}`);
+    $('loadText').textContent = '完成';
+    render(data);
+  }catch(e){
+    clearInterval(t);
+    $('loading').style.display = 'none';
+    $('error').textContent = '体检失败：' + e.message;
+    $('error').style.display = 'block';
+  }finally{
+    $('scanBtn').disabled = false;
+  }
+}
+
+function render(data){
+  const s = data.score, snap = data.snapshot;
+
+  /* meta */
+  const mc = $('metaCard'); mc.textContent = '';
+  const m = el('div','meta');
+  m.appendChild(el('span','repo-name', snap.full_name));
+  const isPrivate = snap.visibility === 'private';
+  m.appendChild(el('span', isPrivate ? 'chip pri' : 'chip pub', isPrivate ? '私有' : '公开'));
+  if(snap.stars !== undefined) m.appendChild(el('span','chip', '★ ' + snap.stars));
+  if(snap.language) m.appendChild(el('span','chip', snap.language));
+  if(snap.license_spdx) m.appendChild(el('span','chip', snap.license_spdx));
+  mc.appendChild(m);
+  if(snap.description) mc.appendChild(el('div','desc', snap.description));
+
+  /* score */
+  const [g, gcls] = grade(s.total);
+  $('scoreNum').innerHTML = s.total.toFixed(1) + '<small> / 100</small>';
+  const gd = $('scoreGrade'); gd.textContent = g; gd.className = 'grade ' + gcls;
+  $('scoreSub').textContent = '静态审计反映优化准备度，不代表真实搜索排名。';
+  if(data.trend.n_records > 1){
+    const tr = data.trend;
+    $('trendInfo').textContent = `趋势：${tr.n_records} 次体检 · ${tr.span_days} 天`;
+  }else{
+    $('trendInfo').textContent = '暂无历史体检记录';
+  }
+
+  /* dims */
+  const dims = $('dims'); dims.textContent = '';
+  Object.entries(s.dimensions).forEach(([k, d]) => {
+    const row = el('div','dim');
+    row.appendChild(el('span','lbl', DIM_LABELS[k] || k));
+    const bar = el('div','bar'); const fill = el('div','fill');
+    const pct = d.eligible > 0 ? Math.round(d.earned / d.eligible * 100) : 0;
+    fill.style.width = '0%'; fill.style.background = COLORS[k] || '#2563eb';
+    bar.appendChild(fill); row.appendChild(bar);
+    row.appendChild(el('span','val', `${d.earned.toFixed(1)} / ${d.total.toFixed(1)}  (${pct}%)`));
+    dims.appendChild(row);
+    requestAnimationFrame(() => { fill.style.width = pct + '%'; });
+  });
+
+  /* top issues */
+  const ti = $('topIssues'); ti.textContent = '';
+  (s.top_issues || []).forEach(r => {
+    const box = el('div','issue');
+    const head = el('div','head');
+    head.appendChild(el('span','pri ' + r.priority, r.priority));
+    head.appendChild(el('span','rule-id', `${r.rule_id} · ${r.name}`));
+    box.appendChild(head);
+    box.appendChild(el('div','reason','原因：' + r.reason));
+    box.appendChild(el('div','sugg',''));
+    box.lastChild.appendChild(el('b','','建议：')); box.lastChild.appendChild(document.createTextNode(r.suggestion || ''));
+    ti.appendChild(box);
+  });
+  if(!s.top_issues.length){ ti.appendChild(el('div','note','没有需要优先修复的问题。')); }
+
+  /* advice */
+  const ac = $('advCard');
+  if(data.advice.items.length && data.advice.source !== 'template'){
+    ac.style.display = 'block';
+    const av = $('advices'); av.textContent = '';
+    data.advice.items.forEach(a => {
+      const box = el('div','adv');
+      const head = el('div','head');
+      head.appendChild(el('span','src-badge ' + data.advice.source, data.advice.source === 'ai' ? 'AI 生成' : '混合'));
+      head.appendChild(el('b','', a.title));
+      box.appendChild(head);
+      if(a.detail) box.appendChild(el('div','detail', a.detail));
+      av.appendChild(box);
+    });
+  } else { ac.style.display = 'none'; }
+
+  /* verification */
+  const vc = $('verCard');
+  if(data.verification){
+    vc.style.display = 'block';
+    const v = $('verify'); v.textContent = '';
+    const g = data.verification.google;
+    const gmap = {indexed:['已收录（有证据）','ok'], not_indexed:['未发现收录证据','warn'], unknown:['无法检测（未配置凭据）','na'], error:['核验失败','bad']};
+    const [gl, gc] = gmap[g.status] || [g.status, 'na'];
+    const item = el('div','ver-item');
+    item.appendChild(el('b','','Google 收录：'));
+    item.appendChild(el('span','st ' + (gc === 'ok' ? 'PASS' : gc === 'warn' ? 'FAIL' : 'UNKNOWN'), gl));
+    item.appendChild(el('div','ev', g.evidence));
+    if(g.total_results !== null) item.appendChild(el('div','ev', `site: 命中 ${g.total_results} 条`));
+    v.appendChild(item);
+    (data.verification.probes || []).forEach(p => {
+      const it = el('div','ver-item');
+      it.appendChild(el('b','', p.model + '：'));
+      it.appendChild(el('span','st ' + (p.mentioned ? 'PASS' : 'FAIL'), p.mentioned ? '提及' : '未提及'));
+      if(p.snippet) it.appendChild(el('div','ev','回答：' + p.snippet));
+      if(p.error) it.appendChild(el('div','ev','错误：' + p.error));
+      v.appendChild(it);
+    });
+    (data.verification.notes || []).forEach(n => v.appendChild(el('div','note', n)));
+  } else { vc.style.display = 'none'; }
+
+  /* trend */
+  const tc = $('trendCard');
+  if(data.trend.records.length >= 2){
+    tc.style.display = 'block';
+    $('trendChart').innerHTML = trendSvg(data.trend.records);
+  } else { tc.style.display = 'none'; }
+
+  /* evidence */
+  const ev = $('evidence'); ev.textContent = '';
+  const evAll = $('evidenceAll'); evAll.textContent = '';
+  const rows = s.results.map(r => {
+    const tr = el('tr');
+    tr.appendChild(el('td','', r.rule_id));
+    tr.appendChild(el('td','', r.name));
+    tr.appendChild(el('td','',''));
+    tr.lastChild.appendChild(el('span','st ' + r.status, r.status));
+    const evd = el('td','ev', r.evidence || '—');
+    tr.appendChild(evd);
+    return tr;
+  });
+  rows.slice(0, 10).forEach(r => ev.appendChild(r));
+  rows.slice(10).forEach(r => evAll.appendChild(r));
+
+  $('result').style.display = 'block';
+  $('loading').style.display = 'none';
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+function trendSvg(records){
+  const W = 940, H = 180, P = 40;
+  const vals = records.map(r => Math.max(0, Math.min(100, r.total)));
+  const min = Math.min(...vals), max = Math.max(...vals);
+  const lo = Math.max(0, Math.floor((min - 10) / 10) * 10), hi = Math.min(100, Math.ceil((max + 10) / 10) * 10);
+  const step = (W - 2*P) / (records.length - 1);
+  const y = v => P + (H - 2*P) * (1 - (v - lo) / Math.max(1, hi - lo));
+  const pts = vals.map((v, i) => `${(P + i*step).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
+  let grid = '';
+  for(let gv = lo; gv <= hi; gv += Math.max(10, Math.round((hi-lo)/4))){
+    const gy = y(gv).toFixed(1);
+    grid += `<line x1="${P}" y1="${gy}" x2="${W-P}" y2="${gy}" stroke="#eef2f7"/><text x="${P-4}" y="${+gy+4}" font-size="10" fill="#94a3b8" text-anchor="end">${gv}</text>`;
+  }
+  const ticks = [0, Math.floor(records.length/2), records.length-1].filter((v,i,a) => a.indexOf(v) === i);
+  const tickTxt = ticks.map(i => `<text x="${(P + i*step).toFixed(1)}" y="${H-8}" font-size="10" fill="#94a3b8" text-anchor="middle">${records[i].at.slice(5,16)}</text>`).join('');
+  return `<svg class="trend-svg" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">${grid}<polyline points="${pts}" fill="none" stroke="#2563eb" stroke-width="2.5"/>${tickTxt}</svg>`;
+}
+
+$('scanBtn').addEventListener('click', scan);
+$('url').addEventListener('keydown', e => { if(e.key === 'Enter') scan(); });
+</script>
+</body>
+</html>

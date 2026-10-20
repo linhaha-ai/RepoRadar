@@ -1,0 +1,36 @@
+# RepoRadar · Docker Compose 部署
+#
+# 用法：
+#   1. （可选）复制 .env.example 为 .env，填入 GITHUB_TOKEN / AGNES 等密钥
+#   2. docker compose up -d --build
+#   3. 浏览器打开 http://localhost:8000
+#
+# 环境变量优先级：宿主 shell > .env > compose 默认（空）。
+# 趋势历史保存在命名卷 repo-seo-history，重建容器不丢失。
+
+services:
+  repo-seo:
+    build:
+      context: ./packages/repo-seo
+    image: repo-seo:latest
+    container_name: repo-radar
+    ports:
+      - "8000:8000"
+    environment:
+      # GitHub Token：扫描私有仓库 / 提升限流（可选）
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+      # OpenAI 兼容 LLM（AI 建议 / README 草稿 / AEO 探测）
+      REPO_SEO_API_KEY: ${REPO_SEO_API_KEY:-}
+      REPO_SEO_BASE_URL: ${REPO_SEO_BASE_URL:-https://apihub.agnes-ai.com/v1}
+      REPO_SEO_MODEL: ${REPO_SEO_MODEL:-agnes-2.5-flash}
+      # 多模型 AEO 探测（逗号分隔）
+      REPO_SEO_PROBE_MODELS: ${REPO_SEO_PROBE_MODELS:-}
+      # Google 收录核验（可选）
+      GOOGLE_CSE_API_KEY: ${GOOGLE_CSE_API_KEY:-}
+      GOOGLE_CSE_ID: ${GOOGLE_CSE_ID:-}
+    volumes:
+      - repo-seo-history:/app/.repo-seo-history
+    restart: unless-stopped
+
+volumes:
+  repo-seo-history:

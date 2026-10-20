@@ -1,0 +1,127 @@
+"""RepoRadar Web 前端后端（FastAPI）。
+
+启动：uvicorn repo_seo.web.app:app --port 8000
+访问：http://localhost:8000
+
+复用 repo_seo 全部能力（抓取/评分/AI 建议/外部验证/趋势），
+API Key / Token 一律从环境变量读取，不从前端传入。
+"""
+
+from __future__ import annotations
+
+import dataclasses
+import os
+from pathlib import Path
+
+from fastapi import FastAPI
+from fastapi.responses import FileResponse, JSONResponse
+from pydantic import BaseModel
+
+from ..advice import generate_advice
+from ..advice.llm import DEFAULT_BASE_URL, DEFAULT_MODEL, LLMClient
+from ..fetcher import RateLimitError, RepoNotFoundError, fetch_snapshot, parse_github_url
+from ..scoring import score_snapshot
+from ..trend import HistoryStore, analyze_trend
+from ..verify import run_external_verification
+
+STATIC_DIR = Path(__file__).parent / "static"
+
+app = FastAPI(
+    title="RepoRadar",
+    description="GitHub 仓库可发现性体检：原生搜索优化 + AI 检索曝光（AEO）",
+    version="2.2",
+)
+
+
+class ScanRequest(BaseModel):
+    url: str
+    ai: bool = True
+    verify: bool = False
+
+
+def _make_llm() -> LLMClient | None:
+    key = os.environ.get("REPO_SEO_API_KEY")
+    if not key:
+        return None
+    return LLMClient(
+        api_key=key,
+        base_url=os.environ.get("REPO_SEO_BASE_URL") or DEFAULT_BASE_URL,
+        model=os.environ.get("REPO_SEO_MODEL") or DEFAULT_MODEL,
+    )
+
+
+@app.get("/")
+def index() -> FileResponse:
+    return FileResponse(STATIC_DIR / "index.html")
+
+
+@app.post("/api/scan")
+def api_scan(req: ScanRequest) -> JSONResponse:
+    try:
+        owner, repo = parse_github_url(req.url)
+    except ValueError as e:
+        return JSONResponse({"error": f"URL 解析失败：{e}"}, status_code=400)
+
+    try:
+        snap = fetch_snapshot(owner, repo, token=os.environ.get("GITHUB_TOKEN"))
+    except RepoNotFoundError as e:
+        return JSONResponse({"error": str(e)}, status_code=404)
+    except RateLimitError as e:
+        return JSONResponse({"error": str(e)}, status_code=429)
+    except Exception as e:
+        return JSONResponse({"error": f"{type(e).__name__}: {e}"}, status_code=500)
+
+    report = score_snapshot(snap)
+
+    llm = _make_llm() if req.ai else None
+    adv = generate_advice(snap, report.results, llm)
+
+    verification = None
+    if req.verify:
+        probes = os.environ.get("REPO_SEO_PROBE_MODELS")
+        probe_models_list = (
+            [m.strip() for m in probes.split(",") if m.strip()] if probes else None
+        )
+        verification = run_external_verification(
+            snap,
+            llm=llm,
+            google_key=os.environ.get("GOOGLE_CSE_API_KEY"),
+            google_cse=os.environ.get("GOOGLE_CSE_ID"),
+            probe_models_list=probe_models_list,
+        )
+
+    store = HistoryStore()
+    diff = analyze_trend(store.load(owner, repo))
+
+    return JSONResponse(
+        {
+            "snapshot": dataclasses.asdict(snap),
+            "score": {
+                "total": report.total,
+                "dimensions": {
+                    dim: {
+                        "label": d.label,
+                        "earned": d.earned,
+                        "eligible": d.eligible,
+                        "total": d.total,
+                    }
+                    for dim, d in report.dimensions.items()
+                },
+                "results": [r.to_dict() for r in report.results],
+                "top_issues": [r.to_dict() for r in report.top_issues],
+                "n_na_unknown": report.n_na_unknown,
+                "warnings": report.warnings,
+            },
+            "advice": {
+                "source": adv.source.value,
+                "note": adv.note,
+                "items": [dataclasses.asdict(a) for a in adv.advices],
+            },
+            "verification": verification.to_dict() if verification else None,
+            "trend": {
+                "records": [{"at": r.at, "total": r.total} for r in diff.records],
+                "n_records": diff.n_records,
+                "span_days": diff.span_days,
+            },
+        }
+    )
