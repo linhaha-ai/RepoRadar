@@ -151,10 +151,22 @@ summary{cursor:pointer;font-size:13.5px;color:var(--brand);user-select:none;}
   border:1px solid var(--line);border-radius:10px;padding:12px;background:#fff;}
 .toc-title{font-size:13px;font-weight:700;color:var(--ink);margin-bottom:8px;}
 .toc-item{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);padding:6px 8px;
-  border-radius:6px;cursor:pointer;margin-bottom:2px;line-height:1.4;transition:background .12s,color .12s;}
+  border-radius:6px;cursor:pointer;margin-bottom:2px;line-height:1.4;transition:background .12s,color .12s;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .toc-item:hover{background:#f1f5f9;color:var(--ink);}
 .opt-body{flex:1;min-width:0;}
 @media(max-width:720px){.opt-layout{flex-direction:column;}.opt-toc{width:100%;position:static;max-height:220px;}}
+
+/* code blocks in optimize results */
+.opt-text{margin-top:8px;white-space:pre-wrap;word-break:break-word;}
+.opt-code{background:#0f172a;border:1px solid #1e293b;border-radius:10px;margin-top:8px;overflow:hidden;}
+.code-head{display:flex;align-items:center;justify-content:space-between;padding:6px 12px;background:#1e293b;}
+.code-lang{font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:.4px;}
+.code-copy{font-size:11.5px;color:#cbd5e1;background:transparent;border:1px solid #475569;border-radius:6px;padding:2px 10px;cursor:pointer;transition:background .12s,color .12s;}
+.code-copy:hover{background:#334155;color:#fff;}
+.code-body{background:transparent;color:#e2e8f0;padding:10px 14px;margin:0;
+  white-space:pre-wrap;word-break:break-word;font-family:ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace;
+  font-size:12.5px;line-height:1.55;overflow-x:auto;}
 
 /* trend */
 .trend-svg{width:100%;height:auto;display:block;}
@@ -529,9 +541,11 @@ function renderOptimize(data){
     box.appendChild(head);
     if(a.what) box.appendChild(el('div','opt-what','【做什么】' + a.what));
     if(a.why) box.appendChild(el('div','opt-why','【为什么】' + a.why));
-    const pre = el('pre','opt-concrete');
-    pre.textContent = a.concrete || '';
-    box.appendChild(pre);
+    if(a.concrete){
+      const holder = el('div','');
+      holder.appendChild(renderConcrete(a.concrete));
+      box.appendChild(holder);
+    }
     body.appendChild(box);
   });
 
@@ -542,6 +556,43 @@ function renderOptimize(data){
   layout.appendChild(toc); layout.appendChild(body);
   res.appendChild(layout);
   window.scrollTo({top: res.offsetTop - 12, behavior:'smooth'});
+}
+
+function renderConcrete(text){
+  /* 把 concrete 里的 ``` 代码围栏解析为深色代码面板，其余按文本展示 */
+  const frag = document.createDocumentFragment();
+  const parts = text.split(/```/);
+  parts.forEach((part, i) => {
+    if(i % 2 === 1){
+      let lang = '';
+      let body = part;
+      const nl = part.indexOf('\n');
+      if(nl >= 0){
+        const first = part.slice(0, nl).trim();
+        if(first && first.length <= 40 && !/\s/.test(first)){ lang = first; body = part.slice(nl + 1); }
+      }
+      const code = el('div','opt-code');
+      const head = el('div','code-head');
+      head.appendChild(el('span','code-lang', lang || 'code'));
+      const copy = el('button','code-copy','复制');
+      copy.addEventListener('click', () => {
+        navigator.clipboard.writeText(body.replace(/\n$/,'')).then(() => {
+          copy.textContent = '已复制';
+          setTimeout(() => { copy.textContent = '复制'; }, 1500);
+        }).catch(() => { copy.textContent = '复制失败'; });
+      });
+      head.appendChild(copy);
+      const pre = el('pre','code-body');
+      pre.textContent = body.replace(/\n$/,'');
+      code.appendChild(head); code.appendChild(pre);
+      frag.appendChild(code);
+    } else if(part.trim()){
+      const p = el('div','opt-text');
+      p.textContent = part;
+      frag.appendChild(p);
+    }
+  });
+  return frag;
 }
 
 function switchTab(name){
