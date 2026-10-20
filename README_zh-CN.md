@@ -44,6 +44,35 @@ pip install -e ".[dev]"
 | `REPO_SEO_BASE_URL` | 自定义 LLM base URL（可选） |
 | `REPO_SEO_MODEL` | 目标 LLM 模型名（可选） |
 
+## Docker 部署（Docker Compose）
+
+体验 RepoRadar 全流程最快的方式是 Docker Compose 一条命令部署，启动 Web UI（镜像内同时包含 CLI）：
+
+```bash
+git clone https://github.com/linhaha-ai/RepoRadar.git
+cd RepoRadar
+docker compose up -d --build
+```
+
+然后在浏览器打开 <http://localhost:8000>，即可扫描任意仓库。
+
+可选：复制 `.env.example` 为 `.env` 并填写密钥（compose 会自动读取）：
+
+| 变量 | 用途 |
+|---|---|
+| `GITHUB_TOKEN` | 访问私有仓库 / 提升 API 限流（可选） |
+| `REPO_SEO_API_KEY` | 兼容 OpenAI 的 LLM API 密钥：AI 建议 / README 草稿 / AEO 探测（可选） |
+| `REPO_SEO_BASE_URL` | 自定义 LLM base URL |
+| `REPO_SEO_MODEL` | 目标 LLM 模型名 |
+| `REPO_SEO_PROBE_MODELS` | 多模型 AEO 探测模型列表（逗号分隔，可选） |
+| `GOOGLE_CSE_API_KEY` / `GOOGLE_CSE_ID` | Google 收录核验（可选） |
+
+说明：
+
+- 扫描历史保存在命名卷 `repo-seo-history` 中，重建容器不丢失。
+- 停止并移除容器：`docker compose down`（默认保留数据卷）。
+- 环境变量优先级：宿主 shell > `.env` > compose 默认值。
+
 ## 使用方法
 
 ### 基础扫描（公开仓库，无需 token）

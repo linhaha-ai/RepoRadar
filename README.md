@@ -43,6 +43,35 @@ After installation the `repo-seo` command becomes available on your PATH.
 | `REPO_SEO_BASE_URL` | Custom LLM base URL (optional) |
 | `REPO_SEO_MODEL` | Target LLM model name (optional) |
 
+## Docker Deployment (Docker Compose)
+
+The fastest way to try RepoRadar end to end is the one-command Docker Compose deployment, which starts the Web UI (the CLI is included in the same image):
+
+```bash
+git clone https://github.com/linhaha-ai/RepoRadar.git
+cd RepoRadar
+docker compose up -d --build
+```
+
+Then open <http://localhost:8000> in your browser and scan any repository.
+
+Optional: copy `.env.example` to `.env` and fill in the keys (the compose file reads them automatically):
+
+| Variable | Purpose |
+|---|---|
+| `GITHUB_TOKEN` | Access private repositories / higher API rate limits (optional) |
+| `REPO_SEO_API_KEY` | OpenAI-compatible LLM API key for AI suggestions, README drafts, AEO probes (optional) |
+| `REPO_SEO_BASE_URL` | Custom LLM base URL |
+| `REPO_SEO_MODEL` | Target LLM model name |
+| `REPO_SEO_PROBE_MODELS` | Comma-separated models for multi-model AEO probes (optional) |
+| `GOOGLE_CSE_API_KEY` / `GOOGLE_CSE_ID` | Google indexing verification (optional) |
+
+Notes:
+
+- Scan history persists in the named volume `repo-seo-history`, so container rebuilds do not lose data.
+- Stop and remove the container with `docker compose down` (the volume is kept by default).
+- Environment variable precedence: host shell > `.env` > compose defaults.
+
 ## Usage
 
 ### Basic scan (public repository, no token needed)
