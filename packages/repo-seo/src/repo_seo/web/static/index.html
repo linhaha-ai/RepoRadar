@@ -118,6 +118,25 @@ summary{cursor:pointer;font-size:13.5px;color:var(--brand);user-select:none;}
 .ver-item:last-child{border-bottom:none;}
 .note{color:var(--muted);font-size:12.5px;margin-top:10px;}
 
+/* one-click optimize */
+.opt-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px;}
+.btn-sm{padding:8px 16px;font-size:13px;}
+.opt-summary{font-size:13.5px;margin-bottom:12px;}
+.opt-gain{display:inline-block;font-size:12.5px;font-weight:700;color:var(--ok);background:#ecfdf5;border-radius:8px;padding:3px 10px;margin-bottom:12px;}
+.opt-action{border:1px solid var(--line);border-radius:10px;padding:12px 16px;margin-bottom:10px;font-size:13.5px;}
+.opt-type{font-size:11.5px;font-weight:700;border-radius:6px;padding:1px 8px;}
+.opt-type.readme{background:#eff6ff;color:#2563eb;}
+.opt-type.file{background:#ecfdf5;color:#16a34a;}
+.opt-type.metadata{background:#fef2f2;color:#dc2626;}
+.opt-type.repo_settings{background:#fffbeb;color:#d97706;}
+.opt-type.other{background:#f1f5f9;color:#64748b;}
+.opt-what{margin-top:6px;}
+.opt-why{color:var(--muted);font-size:12.5px;margin:4px 0 8px;}
+.opt-concrete{background:#f8fafc;border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-top:8px;
+  white-space:pre-wrap;word-break:break-word;font-family:ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace;
+  font-size:12.5px;line-height:1.55;overflow-x:auto;}
+.opt-loading{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13.5px;padding:10px 0;}
+
 /* trend */
 .trend-svg{width:100%;height:auto;display:block;}
 
@@ -177,6 +196,15 @@ code{background:#f1f5f9;border-radius:4px;padding:1px 6px;font-size:12.5px;}
       <h3>AI 优化建议</h3>
       <div id="advices"></div>
     </div>
+    <div class="card" id="optCard" style="display:none">
+      <div class="opt-head">
+        <h3 style="margin-bottom:0">一键优化（AI 修改清单）</h3>
+        <button class="btn btn-sm" id="optBtn">生成具体修改内容</button>
+        <span class="note" style="margin-left:auto">需配置 REPO_SEO_API_KEY</span>
+      </div>
+      <div class="note" style="margin-top:0">基于当前评分报告与提示词，让 AI 给出可直接落地执行的修改内容：README 改成什么样、缺失哪些文件需要补充、描述 / topics 改成什么。</div>
+      <div id="optResult"></div>
+    </div>
     <div class="card" id="verCard" style="display:none">
       <h3>外部验证证据（Search Visibility Evidence）</h3>
       <div id="verify"></div>
@@ -204,6 +232,7 @@ code{background:#f1f5f9;border-radius:4px;padding:1px 6px;font-size:12.5px;}
 const $ = id => document.getElementById(id);
 const COLORS = {readme:'#2563eb',metadata:'#0891b2',aeo:'#7c3aed',discoverability:'#d97706',health:'#16a34a',activity:'#dc2626'};
 const DIM_LABELS = {readme:'README 内容质量',metadata:'仓库元数据',aeo:'AI 检索准备度',discoverability:'搜索可发现性',health:'工程健康与可信度',activity:'项目活跃度'};
+const TYPE_LABELS = {readme:'README',file:'仓库文件',metadata:'元数据',repo_settings:'仓库设置',other:'其他'};
 
 function el(tag, cls, text){
   const n = document.createElement(tag);
@@ -223,6 +252,7 @@ async function scan(){
   if(!url){ $('error').textContent = '请输入仓库 URL。'; $('error').style.display = 'block'; return; }
   $('error').style.display = 'none';
   $('result').style.display = 'none';
+  $('optResult').textContent = '';
   $('loading').style.display = 'flex';
   $('loadText').textContent = '正在抓取仓库数据…';
   $('scanBtn').disabled = true;
@@ -372,6 +402,7 @@ function render(data){
   rows.slice(0, 10).forEach(r => ev.appendChild(r));
   rows.slice(10).forEach(r => evAll.appendChild(r));
 
+  $('optCard').style.display = 'block';
   $('result').style.display = 'block';
   $('loading').style.display = 'none';
   window.scrollTo({top: 0, behavior: 'smooth'});
@@ -395,8 +426,65 @@ function trendSvg(records){
   return `<svg class="trend-svg" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">${grid}<polyline points="${pts}" fill="none" stroke="#2563eb" stroke-width="2.5"/>${tickTxt}</svg>`;
 }
 
+async function optimize(){
+  const url = $('url').value.trim();
+  if(!url){ $('error').textContent = '请输入仓库 URL。'; $('error').style.display = 'block'; return; }
+  const btn = $('optBtn');
+  btn.disabled = true;
+  const res = $('optResult');
+  res.textContent = '';
+  const loading = el('div','opt-loading');
+  loading.appendChild(el('div','spinner'));
+  loading.appendChild(el('span','','正在调用 AI 生成修改清单…（约 30–60 秒）'));
+  res.appendChild(loading);
+  try{
+    const resp = await fetch('/api/optimize', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({url})
+    });
+    const data = await resp.json();
+    if(!resp.ok) throw new Error(data.error || `HTTP ${resp.status}`);
+    renderOptimize(data);
+  }catch(e){
+    res.textContent = '';
+    const err = el('div','error'); err.style.display = 'block';
+    err.textContent = '一键优化失败：' + e.message;
+    res.appendChild(err);
+  }finally{
+    btn.disabled = false;
+  }
+}
+
+function renderOptimize(data){
+  const res = $('optResult'); res.textContent = '';
+  if(data.summary){
+    res.appendChild(el('div','opt-summary','【总结】' + data.summary));
+  }
+  if(data.estimated_gain !== null && data.estimated_gain !== undefined){
+    res.appendChild(el('div','opt-gain','预估可提升：约 ' + data.estimated_gain + ' 分'));
+  }
+  (data.actions || []).forEach(a => {
+    const box = el('div','opt-action');
+    const head = el('div','head');
+    head.appendChild(el('span','opt-type ' + (a.type || 'other'), TYPE_LABELS[a.type] || a.type));
+    head.appendChild(el('b','tgt', a.target));
+    box.appendChild(head);
+    if(a.what) box.appendChild(el('div','opt-what','【做什么】' + a.what));
+    if(a.why) box.appendChild(el('div','opt-why','【为什么】' + a.why));
+    const pre = el('pre','opt-concrete');
+    pre.textContent = a.concrete || '';
+    box.appendChild(pre);
+    res.appendChild(box);
+  });
+  if(!(data.actions || []).length){
+    res.appendChild(el('div','note','AI 未返回可执行的修改内容。'));
+  }
+}
+
 $('scanBtn').addEventListener('click', scan);
 $('url').addEventListener('keydown', e => { if(e.key === 'Enter') scan(); });
+$('optBtn').addEventListener('click', optimize);
 </script>
 </body>
 </html>

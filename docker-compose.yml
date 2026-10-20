@@ -28,6 +28,11 @@ services:
       # Google 收录核验（可选）
       GOOGLE_CSE_API_KEY: ${GOOGLE_CSE_API_KEY:-}
       GOOGLE_CSE_ID: ${GOOGLE_CSE_ID:-}
+      # 出网代理：容器内抓取 GitHub / 调用 LLM 需要访问外网时使用
+      # （默认指向宿主机 Clash 等本地代理，可在 .env 中用 HTTP_PROXY 覆盖）
+      HTTP_PROXY: ${HTTP_PROXY:-http://host.docker.internal:7890}
+      HTTPS_PROXY: ${HTTPS_PROXY:-http://host.docker.internal:7890}
+      NO_PROXY: ${NO_PROXY:-localhost,127.0.0.1}
     volumes:
       - repo-seo-history:/app/.repo-seo-history
     restart: unless-stopped

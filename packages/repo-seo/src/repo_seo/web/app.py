@@ -18,7 +18,8 @@ from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel
 
 from ..advice import generate_advice
-from ..advice.llm import DEFAULT_BASE_URL, DEFAULT_MODEL, LLMClient
+from ..advice.llm import DEFAULT_BASE_URL, DEFAULT_MODEL, LLMClient, LLMError
+from ..advice.optimize import generate_optimize_plan, optimize_plan_to_dict
 from ..fetcher import RateLimitError, RepoNotFoundError, fetch_snapshot, parse_github_url
 from ..scoring import score_snapshot
 from ..trend import HistoryStore, analyze_trend
@@ -37,6 +38,10 @@ class ScanRequest(BaseModel):
     url: str
     ai: bool = True
     verify: bool = False
+
+
+class OptimizeRequest(BaseModel):
+    url: str
 
 
 def _make_llm() -> LLMClient | None:
@@ -125,3 +130,45 @@ def api_scan(req: ScanRequest) -> JSONResponse:
             },
         }
     )
+
+
+def _scan_for(url: str) -> tuple:
+    """抓取 + 评分（供 /api/scan 与 /api/optimize 复用）。"""
+    owner, repo = parse_github_url(url)
+    snap = fetch_snapshot(owner, repo, token=os.environ.get("GITHUB_TOKEN"))
+    report = score_snapshot(snap)
+    return snap, report
+
+
+@app.post("/api/optimize")
+def api_optimize(req: OptimizeRequest) -> JSONResponse:
+    """一键优化：把报告 + 提示词交给 LLM，产出可落地的具体修改清单。"""
+    try:
+        snap, report = _scan_for(req.url)
+    except ValueError as e:
+        return JSONResponse({"error": f"URL 解析失败：{e}"}, status_code=400)
+    except RepoNotFoundError as e:
+        return JSONResponse({"error": str(e)}, status_code=404)
+    except RateLimitError as e:
+        return JSONResponse({"error": str(e)}, status_code=429)
+    except Exception as e:
+        return JSONResponse({"error": f"{type(e).__name__}: {e}"}, status_code=500)
+
+    llm = _make_llm()
+    if llm is None:
+        return JSONResponse(
+            {
+                "error": (
+                    "未配置 REPO_SEO_API_KEY。一键优化需要调用 LLM，"
+                    "请先在 .env / 环境变量中配置 REPO_SEO_API_KEY（可配合 REPO_SEO_BASE_URL、REPO_SEO_MODEL）。"
+                )
+            },
+            status_code=400,
+        )
+
+    try:
+        plan = generate_optimize_plan(snap, report, llm)
+    except LLMError as e:
+        return JSONResponse({"error": str(e)}, status_code=502)
+
+    return JSONResponse(optimize_plan_to_dict(plan))

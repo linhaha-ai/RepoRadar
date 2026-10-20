@@ -8,5 +8,20 @@
 """
 
 from .orchestrator import AdviceSource, generate_advice
+from .optimize import (
+    OptimizeAction,
+    OptimizePlan,
+    build_optimize_prompt,
+    generate_optimize_plan,
+    optimize_plan_to_dict,
+)
 
-__all__ = ["AdviceSource", "generate_advice"]
+__all__ = [
+    "AdviceSource",
+    "generate_advice",
+    "OptimizeAction",
+    "OptimizePlan",
+    "build_optimize_prompt",
+    "generate_optimize_plan",
+    "optimize_plan_to_dict",
+]
