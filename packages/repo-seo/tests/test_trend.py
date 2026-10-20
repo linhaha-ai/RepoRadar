@@ -65,6 +65,30 @@ def test_history_corrupt_file_backup(tmp_path):
     assert p.with_suffix(".corrupt.json").exists()
 
 
+def test_history_full_report_saved_and_loaded(tmp_path):
+    store = HistoryStore(tmp_path)
+    rec = _rec("2026-10-01T10:00:00", 16.5)
+    rec.report = {"snapshot": {"owner": "o"}, "score": {"total": 16.5}, "advice": {"items": []}}
+    store.append(rec, "linhaha-ai", "RepoRadar")
+    loaded = store.load("linhaha-ai", "RepoRadar")
+    assert len(loaded) == 1
+    assert loaded[0].report == rec.report
+    assert loaded[0].to_dict()["report"] == rec.report
+
+
+def test_history_old_record_without_report_compatible(tmp_path):
+    """旧版本数据无 report 字段：解析为 None，不丢失总分/维度。"""
+    store = HistoryStore(tmp_path)
+    store.append(_rec("2026-10-01T10:00:00", 16.5), "o", "r")
+    p = history_path("o", "r", tmp_path)
+    raw = p.read_text(encoding="utf-8").replace('"report":', '"__report__":')  # 模拟旧格式字段名
+    p.write_text(raw, encoding="utf-8")
+    loaded = store.load("o", "r")
+    assert len(loaded) == 1
+    assert loaded[0].report is None
+    assert loaded[0].total == 16.5
+
+
 def test_default_history_dir():
     assert default_history_dir().name == ".repo-seo-history"
 

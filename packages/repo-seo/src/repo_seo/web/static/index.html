@@ -118,6 +118,15 @@ summary{cursor:pointer;font-size:13.5px;color:var(--brand);user-select:none;}
 .ver-item:last-child{border-bottom:none;}
 .note{color:var(--muted);font-size:12.5px;margin-top:10px;}
 
+/* history versions */
+.hist-row{display:flex;align-items:center;gap:12px;padding:10px 14px;border:1px solid var(--line);
+  border-radius:9px;margin-bottom:8px;background:#fff;transition:border-color .12s;}
+.hist-row:hover{border-color:#c7d2fe;}
+.hist-time{font-size:12.5px;color:var(--muted);min-width:150px;}
+.hist-total{font-weight:700;color:var(--brand);font-size:15px;}
+.hist-view{margin-left:auto;}
+#histHint{border:1px dashed var(--brand);border-radius:8px;padding:8px 12px;background:#eff6ff;}
+
 /* one-click optimize */
 .opt-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px;}
 .btn-sm{padding:8px 16px;font-size:13px;}
@@ -240,6 +249,12 @@ code{background:#f1f5f9;border-radius:4px;padding:1px 6px;font-size:12.5px;}
         <h3>历史趋势</h3>
         <div id="trendChart"></div>
       </div>
+      <div class="card" id="histCard" style="display:none">
+        <h3>历史版本（可追溯）</h3>
+        <div class="note" style="margin-top:0">每次体检自动保存完整评分报告。点击「查看」回溯该次报告的规则明细、建议与验证证据；当前报告上方会标注版本提示。</div>
+        <div id="histList"></div>
+        <div class="note" id="histHint" style="margin-top:8px;display:none">↑ 正在追溯查看 <b id="histVersionLabel"></b> 的报告，<a href="#" id="histBack">返回最新报告</a></div>
+      </div>
       <div class="card">
         <h3>规则证据明细</h3>
         <div id="evidence"></div>
@@ -310,6 +325,7 @@ async function scan(){
     const data = await resp.json();
     if(!resp.ok) throw new Error(data.error || `HTTP ${resp.status}`);
     $('loadText').textContent = '完成';
+    window.__latestData = data;
     render(data);
   }catch(e){
     clearInterval(t);
@@ -321,7 +337,7 @@ async function scan(){
   }
 }
 
-function render(data){
+function render(data, fromHistory){
   const s = data.score, snap = data.snapshot;
 
   /* meta */
@@ -447,7 +463,57 @@ function render(data){
   $('result').style.display = 'block';
   switchTab('score');
   $('loading').style.display = 'none';
+  if(!fromHistory){
+    $('histHint').style.display = 'none';
+    loadHistory(snap.owner, snap.name);
+  }
   window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+function formatTime(iso){
+  const d = new Date(iso);
+  const p = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
+async function loadHistory(owner, repo){
+  try{
+    const resp = await fetch(`/api/history/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`);
+    const data = await resp.json();
+    if(!resp.ok) throw new Error(data.error || `HTTP ${resp.status}`);
+    renderHistory(data);
+  }catch(e){ $('histCard').style.display = 'none'; }
+}
+
+function renderHistory(data){
+  const card = $('histCard'), list = $('histList');
+  list.textContent = '';
+  if(!data.records.length){ card.style.display = 'none'; return; }
+  card.style.display = 'block';
+  data.records.slice().reverse().forEach(r => {
+    const row = el('div','hist-row');
+    row.appendChild(el('div','hist-time', formatTime(r.at)));
+    row.appendChild(el('span','hist-total', r.total.toFixed(1)));
+    const btn = el('button','btn btn-sm hist-view', r.has_report ? '查看' : '仅总分');
+    if(r.has_report){
+      btn.addEventListener('click', async () => {
+        try{
+          const resp = await fetch(`/api/history/${encodeURIComponent(data.owner)}/${encodeURIComponent(data.repo)}/${r.index}`);
+          const detail = await resp.json();
+          if(!resp.ok) throw new Error(detail.error || `HTTP ${resp.status}`);
+          $('histVersionLabel').textContent = formatTime(r.at) + ' · ' + r.total.toFixed(1) + ' 分';
+          $('histHint').style.display = 'block';
+          render(detail, true);
+          $('histHint').scrollIntoView({behavior:'smooth', block:'nearest'});
+        }catch(e){
+          $('error').textContent = '加载历史版本失败：' + e.message;
+          $('error').style.display = 'block';
+        }
+      });
+    } else { btn.disabled = true; }
+    row.appendChild(btn);
+    list.appendChild(row);
+  });
 }
 
 function trendSvg(records){
@@ -606,6 +672,10 @@ $('url').addEventListener('keydown', e => { if(e.key === 'Enter') scan(); });
 $('optBtn').addEventListener('click', optimize);
 $('tabBtnScore').addEventListener('click', () => switchTab('score'));
 $('tabBtnOpt').addEventListener('click', () => switchTab('opt'));
+$('histBack').addEventListener('click', e => {
+  e.preventDefault();
+  if(window.__latestData){ render(window.__latestData, true); $('histHint').style.display = 'none'; }
+});
 </script>
 </body>
 </html>

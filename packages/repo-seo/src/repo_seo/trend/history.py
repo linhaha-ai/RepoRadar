@@ -28,9 +28,10 @@ class SnapshotRecord:
     url: str = ""
     source: str = "monitor"       # monitor / scan
     note: str | None = None
+    report: dict | None = None    # 完整评分报告（V2.3 历史版本追溯；旧记录为 None）
 
     def to_dict(self) -> dict:
-        return {
+        d = {
             "at": self.at,
             "total": self.total,
             "dimensions": {
@@ -40,6 +41,9 @@ class SnapshotRecord:
             "source": self.source,
             "note": self.note,
         }
+        if self.report is not None:
+            d["report"] = self.report
+        return d
 
 
 def _parse_record(raw: dict) -> SnapshotRecord | None:
@@ -51,6 +55,7 @@ def _parse_record(raw: dict) -> SnapshotRecord | None:
                 eligible=float(v.get("eligible", 0)),
                 total=float(v.get("total", 0)),
             )
+        report = raw.get("report")
         return SnapshotRecord(
             at=str(raw["at"]),
             total=float(raw["total"]),
@@ -58,6 +63,7 @@ def _parse_record(raw: dict) -> SnapshotRecord | None:
             url=str(raw.get("url", "")),
             source=str(raw.get("source", "monitor")),
             note=raw.get("note"),
+            report=report if isinstance(report, dict) else None,
         )
     except (KeyError, TypeError, ValueError):
         return None

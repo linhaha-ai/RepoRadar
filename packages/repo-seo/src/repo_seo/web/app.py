@@ -22,7 +22,7 @@ from ..advice.llm import DEFAULT_BASE_URL, DEFAULT_MODEL, LLMClient, LLMError
 from ..advice.optimize import generate_optimize_plan, optimize_plan_to_dict
 from ..fetcher import RateLimitError, RepoNotFoundError, fetch_snapshot, parse_github_url
 from ..scoring import score_snapshot
-from ..trend import HistoryStore, analyze_trend
+from ..trend import DimensionSnapshot, HistoryStore, SnapshotRecord, analyze_trend
 from ..verify import run_external_verification
 
 STATIC_DIR = Path(__file__).parent / "static"
@@ -98,39 +98,56 @@ def api_scan(req: ScanRequest) -> JSONResponse:
     store = HistoryStore()
     diff = analyze_trend(store.load(owner, repo))
 
-    return JSONResponse(
-        {
-            "snapshot": dataclasses.asdict(snap),
-            "llm_configured": _make_llm() is not None,
-            "score": {
-                "total": report.total,
-                "dimensions": {
-                    dim: {
-                        "label": d.label,
-                        "earned": d.earned,
-                        "eligible": d.eligible,
-                        "total": d.total,
-                    }
-                    for dim, d in report.dimensions.items()
-                },
-                "results": [r.to_dict() for r in report.results],
-                "top_issues": [r.to_dict() for r in report.top_issues],
-                "n_na_unknown": report.n_na_unknown,
-                "warnings": report.warnings,
+    payload = {
+        "snapshot": dataclasses.asdict(snap),
+        "llm_configured": _make_llm() is not None,
+        "score": {
+            "total": report.total,
+            "dimensions": {
+                dim: {
+                    "label": d.label,
+                    "earned": d.earned,
+                    "eligible": d.eligible,
+                    "total": d.total,
+                }
+                for dim, d in report.dimensions.items()
             },
-            "advice": {
-                "source": adv.source.value,
-                "note": adv.note,
-                "items": [dataclasses.asdict(a) for a in adv.advices],
+            "results": [r.to_dict() for r in report.results],
+            "top_issues": [r.to_dict() for r in report.top_issues],
+            "n_na_unknown": report.n_na_unknown,
+            "warnings": report.warnings,
+        },
+        "advice": {
+            "source": adv.source.value,
+            "note": adv.note,
+            "items": [dataclasses.asdict(a) for a in adv.advices],
+        },
+        "verification": verification.to_dict() if verification else None,
+        "trend": {
+            "records": [{"at": r.at, "total": r.total} for r in diff.records],
+            "n_records": diff.n_records,
+            "span_days": diff.span_days,
+        },
+    }
+
+    # 保存完整评分报告为历史版本（可追溯回看）
+    store.append(
+        SnapshotRecord(
+            at=snap.fetched_at,
+            total=report.total,
+            dimensions={
+                dim: DimensionSnapshot(d.earned, d.eligible, d.total)
+                for dim, d in report.dimensions.items()
             },
-            "verification": verification.to_dict() if verification else None,
-            "trend": {
-                "records": [{"at": r.at, "total": r.total} for r in diff.records],
-                "n_records": diff.n_records,
-                "span_days": diff.span_days,
-            },
-        }
+            url=req.url,
+            source="scan",
+            report=payload,
+        ),
+        owner,
+        repo,
     )
+
+    return JSONResponse(payload)
 
 
 def _scan_for(url: str) -> tuple:
@@ -139,6 +156,55 @@ def _scan_for(url: str) -> tuple:
     snap = fetch_snapshot(owner, repo, token=os.environ.get("GITHUB_TOKEN"))
     report = score_snapshot(snap)
     return snap, report
+
+
+@app.get("/api/history/{owner}/{repo}")
+def api_history(owner: str, repo: str) -> JSONResponse:
+    """历史版本列表：每次体检一条记录（含是否保存了完整报告）。"""
+    store = HistoryStore()
+    records = store.load(owner, repo)
+    return JSONResponse(
+        {
+            "owner": owner,
+            "repo": repo,
+            "records": [
+                {
+                    "index": i,
+                    "at": r.at,
+                    "total": r.total,
+                    "source": r.source,
+                    "has_report": r.report is not None,
+                    "url": r.url,
+                    "dimensions": {
+                        k: {
+                            "earned": v.earned,
+                            "eligible": v.eligible,
+                            "total": v.total,
+                        }
+                        for k, v in r.dimensions.items()
+                    },
+                }
+                for i, r in enumerate(records)
+            ],
+        }
+    )
+
+
+@app.get("/api/history/{owner}/{repo}/{index}")
+def api_history_detail(owner: str, repo: str, index: int) -> JSONResponse:
+    """单个历史版本详情：返回该次体检的完整评分报告。"""
+    store = HistoryStore()
+    records = store.load(owner, repo)
+    if index < 0 or index >= len(records):
+        return JSONResponse(
+            {"error": f"历史版本不存在（共 {len(records)} 条）"}, status_code=404
+        )
+    rec = records[index]
+    if not rec.report:
+        return JSONResponse(
+            {"error": "该历史版本未保存完整报告（旧版本数据）"}, status_code=404
+        )
+    return JSONResponse(rec.report)
 
 
 @app.post("/api/optimize")

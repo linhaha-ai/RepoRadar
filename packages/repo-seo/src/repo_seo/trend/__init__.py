@@ -9,11 +9,12 @@
 定期调用 `repo-seo monitor <url>` 实现（每次调用只做一次体检并追加历史）。
 """
 
-from .history import HistoryStore, SnapshotRecord, default_history_dir
+from .history import DimensionSnapshot, HistoryStore, SnapshotRecord, default_history_dir
 from .trend import TrendDiff, analyze_trend, render_trend_svg
 from .report import render_trend_terminal, render_trend_markdown, render_trend_html
 
 __all__ = [
+    "DimensionSnapshot",
     "HistoryStore",
     "SnapshotRecord",
     "default_history_dir",
