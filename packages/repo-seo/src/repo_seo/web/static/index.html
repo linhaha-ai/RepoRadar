@@ -200,7 +200,7 @@ code{background:#f1f5f9;border-radius:4px;padding:1px 6px;font-size:12.5px;}
       <div class="opt-head">
         <h3 style="margin-bottom:0">一键优化（AI 修改清单）</h3>
         <button class="btn btn-sm" id="optBtn">生成具体修改内容</button>
-        <span class="note" style="margin-left:auto">需配置 REPO_SEO_API_KEY</span>
+        <span class="note" id="optKeyHint" style="margin-left:auto;display:none">未配置 REPO_SEO_API_KEY，一键优化不可用</span>
       </div>
       <div class="note" style="margin-top:0">基于当前评分报告与提示词，让 AI 给出可直接落地执行的修改内容：README 改成什么样、缺失哪些文件需要补充、描述 / topics 改成什么。</div>
       <div id="optResult"></div>
@@ -405,6 +405,7 @@ function render(data){
   rows.slice(10).forEach(r => evAll.appendChild(r));
 
   $('optCard').style.display = 'block';
+  $('optKeyHint').style.display = data.llm_configured ? 'none' : 'inline';
   $('result').style.display = 'block';
   $('loading').style.display = 'none';
   window.scrollTo({top: 0, behavior: 'smooth'});
@@ -431,9 +432,16 @@ function trendSvg(records){
 async function optimize(){
   const url = $('url').value.trim();
   if(!url){ $('error').textContent = '请输入仓库 URL。'; $('error').style.display = 'block'; return; }
+  const res = $('optResult');
+  if($('optKeyHint').style.display !== 'none'){
+    res.textContent = '';
+    const err = el('div','error'); err.style.display = 'block';
+    err.textContent = '未配置 REPO_SEO_API_KEY，一键优化不可用。请在 .env 中配置 REPO_SEO_API_KEY（可配合 REPO_SEO_BASE_URL、REPO_SEO_MODEL）后重启容器。';
+    res.appendChild(err);
+    return;
+  }
   const btn = $('optBtn');
   btn.disabled = true;
-  const res = $('optResult');
   res.textContent = '';
   const loading = el('div','opt-loading');
   loading.appendChild(el('div','spinner'));

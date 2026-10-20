@@ -101,6 +101,7 @@ def api_scan(req: ScanRequest) -> JSONResponse:
     return JSONResponse(
         {
             "snapshot": dataclasses.asdict(snap),
+            "llm_configured": _make_llm() is not None,
             "score": {
                 "total": report.total,
                 "dimensions": {
