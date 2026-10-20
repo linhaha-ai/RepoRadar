@@ -347,9 +347,11 @@ function render(data){
       const box = el('div','adv');
       const head = el('div','head');
       head.appendChild(el('span','src-badge ' + data.advice.source, data.advice.source === 'ai' ? 'AI 生成' : '混合'));
-      head.appendChild(el('b','', a.title));
+      if(a.rule_id) head.appendChild(el('span','rule-id', a.rule_id));
+      head.appendChild(el('b','', a.problem || a.suggestion || '优化建议'));
       box.appendChild(head);
-      if(a.detail) box.appendChild(el('div','detail', a.detail));
+      if(a.reason) box.appendChild(el('div','detail','原因：' + a.reason));
+      if(a.suggestion) box.appendChild(el('div','','建议：' + a.suggestion));
       av.appendChild(box);
     });
   } else { ac.style.display = 'none'; }
