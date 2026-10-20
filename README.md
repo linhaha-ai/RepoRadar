@@ -1,5 +1,7 @@
 # RepoRadar
 
+**Languages / 语言：** [English](README.md) | [简体中文](README_zh-CN.md)
+
 RepoRadar is a Python CLI tool that scores any GitHub repository's discoverability (0–100) across GitHub native search and LLM retrieval pipelines, then delivers evidence-backed remediation guidance so open-source projects become easier to find, understand, and correctly cited. Designed for maintainers who want measurable **GitHub search optimization** without hiring an SEO agency, it applies 29 deterministic rules across six dimensions—README quality, metadata, AI retrieval readiness, search discoverability, engineering health, and project activity—so you get exactly what's missing and why. Whether you are launching a new package or reviving a dormant repo, RepoRadar gives you a clear **AEO** (Answer Engine Optimization) roadmap: score, diagnose, fix, and verify. Built on Python 3.11+ with httpx-based three-tier fetching (REST API / raw / web fallback), optional OpenAI-compatible LLM recommendation generation, and comprehensive unit test coverage, it runs entirely locally and integrates naturally into CI or developer workflows. This repository itself is scored at 16.5/100 by RepoRadar, proving the tool's diagnostic honesty.
 ## Overview
 
