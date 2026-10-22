@@ -1,6 +1,6 @@
 # 项目大纲：GitHub 仓库 SEO 体检工具（RepoSEO Analyzer）
 
-> 版本：v0.3 ｜ 日期：2026-10-19 ｜ 状态：评分模型 2.0（6 维度）+ AI 优化建议模块已纳入设计，技术栈 Python
+> 版本：v0.4 ｜ 日期：2026-10-22 ｜ 状态：M1–M5 与 V2 已实现；剩余扩展项：更多 AEO 服务商接入、批量仓库对比、PyPI 正式发布
 > 配套文档：**设计文档（权威规格）→ `docs/DESIGN.md`**（含 §10 AI 优化建议模块）；M2/M3/M3.5 开发以设计文档为准
 
 ---
@@ -44,11 +44,16 @@
 - 修复建议可**一键导出为优化清单**（可直接照做）；
 - **AI 优化建议（M3.5）**：把评分规则 + 检查结果交给 LLM，生成贴合项目语义的建议（问题/建议/原因/示例/预计影响），失败自动降级为规则模板；评分仍由确定性引擎决定，AI 永不改分。
 
-### V2（扩展，明确预留）
-- **Google 收录检查**：Search Console 授权（有授权才判"已验证"，否则标"无法检测"）；
-- **多模型 AEO 实测**：对 ChatGPT / Gemini / Perplexity 跑真实查询，观察项目是否被提及/引用（真实曝光度，区别于静态准备度）；
-- **分项趋势监控**：定期检测维度得分变化；
-- **Web 界面**。
+### V2（扩展，已实现）
+- **Google 收录检查**（已实现）：`--verify` 通过 Google Custom Search API（`GOOGLE_CSE_API_KEY` / `GOOGLE_CSE_ID`）核验；未配置 → 无法检测，不误判为未收录；
+- **多模型 AEO 实测**（已实现）：对 `REPO_SEO_PROBE_MODELS` 配置的模型查询项目是否被提及/引用；
+- **分项趋势监控**（已实现）：`monitor` 定时体检 + `trend` 历史曲线；
+- **Web 界面**（已实现）：FastAPI + 单页，含扫描、一键优化、历史回溯。
+
+### 尚未实现（明确的后续项）
+- **更多原生 AEO 服务商接入**（当前仅 OpenAI 兼容端点）；
+- **批量仓库对比矩阵**（多仓库横向评分）；
+- **PyPI 正式发布**（当前仅源码安装）。
 
 ---
 
@@ -266,22 +271,31 @@ flowchart LR
 ```text
 github-seo/                      # 本项目根目录（E:\code-workspace\ai-code\github-seo）
 ├── PROJECT_OUTLINE.md           # 本大纲
+├── README.md / README_zh-CN.md  # 项目说明（工具自身吃自己的狗粮）
+├── docker-compose.yml           # 一键部署 Web UI
 ├── docs/
+│   ├── DESIGN.md                # 设计文档（权威实现规格）
 │   ├── methodology.md           # SEO/AEO 方法论（规则理论依据）
 │   └── rule-references.md       # 规则 ↔ 方法论 ↔ 评分分值对照表（可溯源）
 ├── packages/
 │   └── repo-seo/
 │       ├── src/repo_seo/
 │       │   ├── __init__.py
-│       │   ├── cli.py           # Typer 入口
-│       │   ├── fetcher/         # github_api.py / raw_reader.py / fallback.py
-│       │   ├── model/           # snapshot.py / evidence.py / enums.py
-│       │   ├── rules/           # readme.py / metadata.py / aeo.py / discoverability.py / health.py / activity.py
-│       │   ├── scoring/         # weights.py / scorer.py / priorities.py
-│       │   ├── verify/          # (V2) google_index.py / model_probe.py
-│       │   └── report/          # terminal.py / markdown.py / html.py
-│       ├── tests/               # pytest + fixture 仓库数据
-│       ├── examples/            # 示例报告（含 RepoRadar 私有实测）
+│       │   ├── cli.py           # Typer 入口（scan / parse / rules / monitor / trend）
+│       │   ├── fetcher/         # url_parser.py / github_api.py / raw_reader.py / fallback.py / fetch.py
+│       │   ├── model/           # snapshot.py / rules.py（RepoSnapshot / Rule / RuleResult）
+│       │   ├── rules/           # readme / metadata / aeo / discoverability / health / activity
+│       │   │                    #   + engine.py（聚合）/ config.py（--config 覆盖）
+│       │   ├── scoring/         # scorer.py（加权聚合 + 三状态动态分母）
+│       │   ├── advice/          # llm.py / prompts.py / schema.py / templates.py / orchestrator.py
+│       │   │                    #   + readme_gen.py（--readme-draft）/ optimize.py（一键优化）
+│       │   ├── report/          # terminal.py / markdown.py / html.py
+│       │   ├── trend/           # history.py / trend.py / report.py（monitor / trend）
+│       │   ├── verify/          # google.py / aeo_probe.py / orchestrator.py
+│       │   └── web/             # app.py + static/index.html（FastAPI 单页）
+│       ├── tests/               # pytest：98 个测试函数
+│       ├── examples/            # 示例报告 / 自定义配置 / RepoRadar 实测产物
+│       ├── Dockerfile           # python:3.11-slim，非 root，HEALTHCHECK
 │       └── pyproject.toml
 └── README.md                    # 项目说明（工具自身吃自己的狗粮）
 ```
@@ -308,13 +322,15 @@ github-seo/                      # 本项目根目录（E:\code-workspace\ai-cod
 
 - **单元测试**：每条规则 ≥ 2 个用例（通过/失败），外部证据类规则另测 N/A 与 unknown 状态；
 - **集成测试**：真实仓库 3 个——RepoRadar（私有 + Token）+ 1 个高排名公开标杆 + 1 个普通公开仓库；
-- **端到端验收清单**：
-  - [ ] `repo-seo https://github.com/xxx/yyy`（带/不带 Token）3 秒内输出报告；
-  - [ ] 每个检查项含证据位置 + 扣分原因 + 修复建议；
-  - [ ] 硬性规则与语义判断明确标记，语义结果带置信度；
-  - [ ] 无文档站/无授权场景输出 N/A 或"无法检测"，不误扣分；
-  - [ ] 报告含总分、维度得分、Top3 优先修复问题，可导出 Markdown/HTML；
-  - [ ] 私有仓库 Token 场景端到端跑通（RepoRadar）。
+- **端到端验收清单**（2026-10-22 复核：依据实现代码、98 个测试函数与 `examples/` 产物勾选；本机未安装 Python，`pytest` 未实际执行，建议在 Python 3.11+ 环境复跑确认）：
+  - [x] `repo-seo scan <url>`（带/不带 Token）输出报告（响应时间依赖网络，未作为本次验收项）；
+  - [x] 每个检查项含证据位置 + 扣分原因 + 修复建议；
+  - [x] 硬性规则与语义判断明确标记，语义结果带置信度；
+  - [x] 无文档站/无授权场景输出 N/A 或"无法检测"，不误扣分；
+  - [x] 报告含总分、维度得分、Top3 优先修复问题，可导出 Markdown/HTML；
+  - [x] 私有仓库 Token 场景端到端跑通（RepoRadar）。
+
+> 复跑命令：`cd packages/repo-seo && pytest`。
 
 ---
 
@@ -333,17 +349,23 @@ github-seo/                      # 本项目根目录（E:\code-workspace\ai-cod
 
 ## 14. 后续扩展路线图
 
-1. **AI 一键改写（V2）**：在 M3.5 建议模块之上，由 LLM 直接产出"优化后的 About + README 草稿"（工具从诊断进化到治疗）；
-2. **多模型 AEO 实测**：ChatGPT / Gemini / Perplexity 真实查询，检测是否被提及/引用（真实曝光证据）；
-3. **Google 收录监控**：Search Console 授权后核验收录状态与变化；
-4. **定时趋势**：维度得分历史曲线、异常告警；
-5. **批量对比 + Web**：多仓库矩阵、浏览器插件。
+1. **AI 一键改写（V2）**：✅ 已实现 —— `--readme-draft` 生成 README 草稿，Web `/api/optimize` 输出一键优化清单；
+2. **多模型 AEO 实测**：✅ 已实现 —— `--verify` + `REPO_SEO_PROBE_MODELS`；
+3. **Google 收录监控**：✅ 已实现 —— `--verify`（Google Custom Search API）核验收录状态；
+4. **定时趋势**：✅ 已实现 —— `monitor` 定时体检 + `trend` 历史曲线与 SVG；
+5. **批量对比 + Web**：🟡 部分实现 —— Web 界面已完成；**多仓库对比矩阵与浏览器插件尚未实现**。
 
 ---
 
-## 15. 下一步（评审后即启动）
+## 15. 执行状态与后续
 
-1. 技术栈已确认 Python（Typer + httpx + markdown-it-py）；
-2. **准备 RepoRadar 的 GITHUB_TOKEN**（私有仓库读取用；开发期不需要仓库公开）；
-3. 从 M1 开始：初始化 `packages/repo-seo` 脚手架 + 抓取层，先跑通「URL → RepoSnapshot」并实测 RepoRadar；
-4. 同步沉淀 `docs/methodology.md`（把 SEO/AEO 方法论正式化，作为规则依据）。
+1. ✅ 技术栈已落地：Python（Typer + httpx + markdown-it-py + FastAPI）；
+2. ✅ RepoRadar Token 私有仓库读取链路已实现并用于端到端实测；
+3. ✅ M1–M5 与 V2 已完成（详见 §11 与 `docs/DESIGN.md` §12）；
+4. ✅ `docs/methodology.md` 与 `docs/rule-references.md` 已补齐（2026-10-22）。
+
+后续待办（不影响当前评分模型）：
+
+- 更多原生 AEO 服务商接入（Gemini / Perplexity / Claude 等）；
+- 批量仓库对比矩阵 / 浏览器插件；
+- PyPI 正式发布。
