@@ -15,3 +15,6 @@ build/
 dist/
 .venv/
 venv/
+
+# 本地 agent 会话状态（不参与版本管理）
+.omo/
