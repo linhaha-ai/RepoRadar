@@ -5,7 +5,7 @@
 | 项目 | GitHub 仓库可发现性体检工具（RepoSEO Analyzer / `repo-seo`） |
 | 文档版本 | v0.2 |
 | 日期 | 2026-10-19 |
-| 状态 | M1 已实现 ✅；M2/M3/M3.5 按本文档设计规格实现 |
+| 状态 | M1–M5 与 V2 均已实现 ✅（最后更新 2026-10-22；实现状态以代码与本节 §12 为准） |
 | 关联文档 | `PROJECT_OUTLINE.md`（项目大纲 v0.2）；AI 优化建议模块设计已并入 §10 |
 
 ---
@@ -86,11 +86,11 @@ flowchart LR
 | cli | `src/repo_seo/cli.py` | ✅ | 命令入口、参数、Token 注入、错误提示 |
 | fetcher | `src/repo_seo/fetcher/` | ✅ | 抓取与降级（§5） |
 | model | `src/repo_seo/model/` | ✅ | RepoSnapshot 数据模型（§4.1） |
-| rules | `src/repo_seo/rules/` | 🔲 M2 | 规则库（§6） |
-| scoring | `src/repo_seo/scoring/` | 🔲 M3 | 评分聚合（§7） |
-| report | `src/repo_seo/report/` | 🔲 M3 | 报告渲染（§8） |
-| advice | `src/repo_seo/advice/` | 🔲 M3.5 | AI 建议生成与模板兜底（§10） |
-| verify | `src/repo_seo/verify/` | 🔲 V2 | Google 收录、多模型 AEO 实测（§11） |
+| rules | `src/repo_seo/rules/` | ✅ M2 | 规则库（§6） |
+| scoring | `src/repo_seo/scoring/` | ✅ M3 | 评分聚合（§7） |
+| report | `src/repo_seo/report/` | ✅ M3 | 报告渲染（§8） |
+| advice | `src/repo_seo/advice/` | ✅ M3.5 | AI 建议生成与模板兜底（§10） |
+| verify | `src/repo_seo/verify/` | ✅ V2 | Google 收录、多模型 AEO 实测（§11） |
 
 ---
 
@@ -255,7 +255,7 @@ README:  API readme → raw 兜底 → 网页（仅公开仓库）
 | ID | 检查项 | 分值 | 类型 | 检测方法 | 通过条件 |
 |---|---|---|---|---|---|
 | D01 | 仓库页面可访问性 | 3 | 硬性 | visibility、archived、抓取过程无阻断 | public 且非 archived（私有 → 0 分 + P0 警告） |
-| D02 | 搜索引擎收录证据 | 4 | 外部 | Search Console / 搜索结果核验 | V1：无授权 → UNKNOWN（不计分，标注"未验证"）；V2：有证据才计分 |
+| D02 | 搜索引擎收录证据 | 4 | 外部（Google Custom Search API） | `site:github.com/owner/repo` 核验（`--verify`） | 静态引擎无授权 → UNKNOWN（不计分，标注"未验证"）；`--verify` 有证据才在 Search Visibility Evidence 中计为已验证 |
 | D03 | 文档站可抓取性 | 3 | 硬性 | homepage / GitHub Pages 可访问、正文可读 | 有文档站且页面 200；无文档站 → N/A 不计分 |
 | D04 | Sitemap 与规范 URL | 2 | 硬性 | 文档站 sitemap.xml / robots.txt | 有文档站时存在 sitemap；无文档站 → N/A 不计分 |
 | D05 | 内外部链接完整性 | 3 | 硬性 | README/描述中链接状态抽查 | 链接有效（HTTP 非 404）；死链每条扣分 |
@@ -535,12 +535,14 @@ repo-seo scan owner/repo --model gpt-4o-mini
 | 阶段 | 内容 | 状态 |
 |---|---|---|
 | M1 | 脚手架、抓取层、数据模型、CLI、RepoRadar 实测 | ✅ 2026-10-19 |
-| M2 | 规则库（6 维度基线 29+ 条）+ 证据生成 + 单测 | 🔲 |
-| M3 | 评分聚合 + 三状态 + 三指标 + 终端/Markdown/HTML 报告 | 🔲 |
-| M3.5 | AI 优化建议模块（advice：LLM 客户端 + Prompt + schema + 模板兜底） | 🔲 |
-| M4 | 端到端验证与权重校准（RepoRadar + 标杆仓库） | 🔲 |
-| M5 | 规则可配置、报告导出增强 | 🔲 |
-| V2 | Google 收录、多模型 AEO 实测、趋势监控、Web | 🔲 |
+| M2 | 规则库（6 维度基线 29+ 条）+ 证据生成 + 单测 | ✅ 29 条规则、98 个测试函数 |
+| M3 | 评分聚合 + 三状态 + 三指标 + 终端/Markdown/HTML 报告 | ✅ |
+| M3.5 | AI 优化建议模块（advice：LLM 客户端 + Prompt + schema + 模板兜底） | ✅ |
+| M4 | 端到端验证与权重校准（RepoRadar + 标杆仓库） | ✅ RepoRadar 端到端实测；权重校准为持续项 |
+| M5 | 规则可配置、报告导出增强 | ✅ |
+| V2 | Google 收录、多模型 AEO 实测、趋势监控、Web | ✅ |
+
+> 仍未完成（不在 M1–M5/V2 范围内）：更多原生 AEO 服务商接入、批量仓库对比、PyPI 正式发布。详见 `PROJECT_OUTLINE.md` §14 与 `packages/repo-seo/README.md` 状态清单。
 
 ---
 
@@ -554,7 +556,7 @@ repo-seo scan owner/repo --model gpt-4o-mini
 | 语义判断准确度 | 硬性/语义分离 + 置信度 + 可人工复核 | 开放 |
 | 权重是否过拟合 | M4 用 3 个不同类型仓库校准 | 开放 |
 | 语义检查的 LLM 选型 | 可插拔接口，V1 默认规则启发式 | 开放 |
-| D02 收录证据 V1 无法验证 | V1 标 UNKNOWN 不计分；V2 接 Search Console | 开放 |
+| D02 收录证据 V1 无法验证 | V1 标 UNKNOWN 不计分；V2 通过 `--verify`（Google Custom Search API）外部核验，不混入总分 | ✅ 已解决（静态引擎仍保持 UNKNOWN） |
 | AI 建议输出不稳定 / 解析失败 | JSON Schema + 重试 1 次 + 降级模板建议 | 已设计（§10.6） |
 | 私有仓库数据外发模型服务商 | 显式提示 + `--no-ai` + 本地模型（Ollama） | 已设计（§10.7） |
 | AI 建议成本不可控 | README 截断 + 只传扣分项证据 + 阶段预算 90s | 已设计（§10.6） |
