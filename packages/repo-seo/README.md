@@ -19,7 +19,7 @@ $env:GITHUB_TOKEN = "ghp_xxx"
 repo-seo scan owner/repo
 ```
 
-## 当前状态（M1~M3 ✅）
+## 当前状态（M1–M5 + V2 ✅）
 
 - [x] URL 解析（https / git@ / owner-repo）
 - [x] GitHub API 抓取（Token 支持、限流诊断、私有仓库）
@@ -168,6 +168,8 @@ python -m repo_seo.cli parse owner/repo   # 调试 URL 解析
 
 ## 路线图
 
-M1 抓取层 → M2 规则库（6 维度 × 检查项）→ M3 评分 2.0 + 终端报告 → M3.5 AI 优化建议（LLM 生成 + 模板兜底）→ M4 端到端验证 → M5 Markdown/HTML 报告导出 → V2 收录检查 / 多模型 AEO 实测。
+M1 抓取层 → M2 规则库（6 维度 × 检查项）→ M3 评分 2.0 + 终端报告 → M3.5 AI 优化建议（LLM 生成 + 模板兜底）→ M4 端到端验证 → M5 Markdown/HTML 报告导出 → V2 收录检查 / 多模型 AEO 实测 / 趋势监控 / Web（以上均已完成）。
 
-详见项目根目录 `PROJECT_OUTLINE.md` 与 `docs/DESIGN.md`（§10 AI 优化建议模块）。
+剩余待办：更多原生 AEO 服务商接入、批量仓库对比、PyPI 正式发布。
+
+详见项目根目录 `PROJECT_OUTLINE.md`、`docs/DESIGN.md`、`docs/methodology.md` 与 `docs/rule-references.md`。
