@@ -36,6 +36,14 @@ def test_build_prompt_contains_facts_and_advice():
     assert "（未设置）" in user             # 缺失事实以占位说明
 
 
+def test_build_prompt_total_matches_score_report():
+    s = make_snapshot()
+    report = score_snapshot(s)
+    user = build_user_prompt(s, report.results, [])
+    assert f"总分 {report.total:.1f}/100" in user
+    assert f"总分 {sum(r.score_earned for r in report.results):.1f}/100" not in user
+
+
 def test_generate_uses_only_target_rules():
     s = make_snapshot(readme_text=None)
     report = score_snapshot(s)

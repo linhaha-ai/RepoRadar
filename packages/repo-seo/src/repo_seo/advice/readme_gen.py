@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from ..model import RepoSnapshot, RuleResult
+from ..model import EvidenceStatus, RepoSnapshot, RuleResult
 from ..rules.engine import DIMENSION_LABELS
 from .llm import LLMClient, LLMError
 from .schema import AIAdvice
@@ -148,7 +148,18 @@ def build_user_prompt(
 
 
 def _score_total(results: list[RuleResult]) -> float:
-    return sum(r.score_earned for r in results)
+    """与 score_snapshot 一致：按可评分值归一化到 0–100。
+
+    不能只累加 score_earned——各维度满分合计为 100，但 N/A / UNKNOWN
+    会改变可评分值，直接求和会得到 60 多分并误导 README 中的自评分。
+    """
+    earned = sum(r.score_earned for r in results)
+    eligible = sum(
+        r.score
+        for r in results
+        if r.status not in (EvidenceStatus.N_A, EvidenceStatus.UNKNOWN)
+    )
+    return earned / eligible * 100 if eligible else 0.0
 
 
 def strip_code_fence(content: str) -> str:
