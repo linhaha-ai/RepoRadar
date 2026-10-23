@@ -133,7 +133,7 @@ summary{cursor:pointer;font-size:13.5px;color:var(--brand);user-select:none;}
 .opt-summary{font-size:13.5px;margin-bottom:12px;}
 .opt-gain{display:inline-block;font-size:12.5px;font-weight:700;color:var(--ok);background:#ecfdf5;border-radius:8px;padding:3px 10px;margin-bottom:12px;}
 .opt-action{border:1px solid var(--line);border-radius:10px;padding:12px 16px;margin-bottom:10px;font-size:13.5px;}
-.opt-type{font-size:11.5px;font-weight:700;border-radius:6px;padding:1px 8px;}
+.opt-type{font-size:11.5px;font-weight:700;border-radius:6px;padding:1px 8px;flex-shrink:0;white-space:nowrap;}
 .opt-type.readme{background:#eff6ff;color:#2563eb;}
 .opt-type.file{background:#ecfdf5;color:#16a34a;}
 .opt-type.metadata{background:#fef2f2;color:#dc2626;}
@@ -145,6 +145,32 @@ summary{cursor:pointer;font-size:13.5px;color:var(--brand);user-select:none;}
   white-space:pre-wrap;word-break:break-word;font-family:ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace;
   font-size:12.5px;line-height:1.55;overflow-x:auto;}
 .opt-loading{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13.5px;padding:10px 0;}
+
+/* apply result */
+.apply-banner{border:1px solid #bbf7d0;background:#f0fdf4;border-radius:10px;padding:12px 16px;
+  font-size:13.5px;margin-bottom:12px;line-height:1.6;}
+.apply-banner.warn{border-color:#fde68a;background:#fffbeb;}
+.apply-banner b{color:var(--ok);}
+.apply-meta{font-size:12.5px;color:var(--muted);margin-top:4px;word-break:break-all;}
+.apply-section{margin:14px 0;}
+.apply-section-title{font-size:13px;font-weight:700;margin-bottom:6px;}
+.apply-file{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px;
+  border:1px solid var(--line);border-radius:8px;padding:7px 11px;margin-bottom:6px;background:#fff;}
+.apply-file code{background:transparent;padding:0;font-weight:600;}
+.apply-tag{font-size:11px;border-radius:5px;padding:1px 7px;font-weight:700;}
+.apply-tag.created{background:#ecfdf5;color:#16a34a;}
+.apply-tag.updated{background:#eff6ff;color:#2563eb;}
+.apply-tag.skipped{background:#f1f5f9;color:#64748b;}
+.apply-tag.manual{background:#fffbeb;color:#d97706;}
+.apply-reason{color:var(--muted);font-size:12.5px;}
+.apply-detail{margin:-2px 0 10px 12px;font-size:12.5px;}
+.apply-detail summary{cursor:pointer;color:var(--brand);font-weight:600;margin-bottom:4px;}
+.diff-body{white-space:pre;max-height:520px;overflow:auto;}
+.diff-line{display:block;min-height:1.55em;}
+.diff-add{background:rgba(22,163,74,.20);color:#bbf7d0;}
+.diff-del{background:rgba(220,38,38,.20);color:#fecaca;}
+.diff-hunk{color:#93c5fd;}
+.diff-meta{color:#94a3b8;}
 
 /* tabs */
 .tabs{display:flex;gap:8px;margin-bottom:14px;border-bottom:1px solid var(--line);padding-bottom:10px;}
@@ -160,8 +186,8 @@ summary{cursor:pointer;font-size:13.5px;color:var(--brand);user-select:none;}
   border:1px solid var(--line);border-radius:10px;padding:12px;background:#fff;}
 .toc-title{font-size:13px;font-weight:700;color:var(--ink);margin-bottom:8px;}
 .toc-item{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);padding:6px 8px;
-  border-radius:6px;cursor:pointer;margin-bottom:2px;line-height:1.4;transition:background .12s,color .12s;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  border-radius:6px;cursor:pointer;margin-bottom:2px;line-height:1.4;transition:background .12s,color .12s;}
+.toc-item > span:last-child{min-width:0;white-space:normal;overflow-wrap:anywhere;}
 .toc-item:hover{background:#f1f5f9;color:var(--ink);}
 .opt-body{flex:1;min-width:0;}
 @media(max-width:720px){.opt-layout{flex-direction:column;}.opt-toc{width:100%;position:static;max-height:220px;}}
@@ -215,8 +241,8 @@ code{background:#f1f5f9;border-radius:4px;padding:1px 6px;font-size:12.5px;}
 
   <section id="result">
     <div class="tabs">
-      <button class="tab active" id="tabBtnScore" data-panel="tabScore">评分报告</button>
-      <button class="tab" id="tabBtnOpt" data-panel="tabOpt">一键优化</button>
+<button class="tab active" id="tabBtnScore" data-panel="score">评分报告</button>
+<button class="tab" id="tabBtnOpt" data-panel="opt">一键优化</button>
     </div>
     <div class="tab-panel" id="tabScore">
       <div class="card" id="metaCard"></div>
@@ -268,9 +294,11 @@ code{background:#f1f5f9;border-radius:4px;padding:1px 6px;font-size:12.5px;}
         <div class="opt-head">
           <h3 style="margin-bottom:0">一键优化（AI 修改清单）</h3>
           <button class="btn btn-sm" id="optBtn">生成具体修改内容</button>
+          <button class="btn btn-sm" id="applyBtn">一键优化并应用</button>
           <span class="note" id="optKeyHint" style="margin-left:auto;display:none">未配置 REPO_SEO_API_KEY，一键优化不可用</span>
         </div>
-        <div class="note" style="margin-top:0">基于当前评分报告与提示词，让 AI 给出可直接落地执行的修改内容：README 改成什么样、缺失哪些文件需要补充、描述 / topics 改成什么。生成后左侧大纲可点击跳转定位。</div>
+        <div class="note" style="margin-top:0">基于当前评分报告与提示词，让 AI 给出可直接落地执行的修改内容：README 改成什么样、缺失哪些文件需要补充、描述 / topics 改成什么。生成后左侧大纲可点击跳转定位。<br>
+          <b>一键优化并应用</b>：仅对自己的仓库（Token 有 push 权限）生效——在本地工作区下载仓库副本，写入 README 与安全文档文件，并展示 unified diff；<b>不会自动 commit / push</b>。</div>
         <div id="optResult"></div>
       </div>
     </div>
@@ -327,6 +355,7 @@ async function scan(){
     $('loadText').textContent = '完成';
     window.__latestData = data;
     render(data);
+    syncUrlFromSnapshot(data);
   }catch(e){
     clearInterval(t);
     $('loading').style.display = 'none';
@@ -335,6 +364,16 @@ async function scan(){
   }finally{
     $('scanBtn').disabled = false;
   }
+}
+
+function syncUrlFromSnapshot(data){
+  /* 体检成功后把地址栏同步为 /owner/repo，便于分享 / 收藏 / 深链回看 */
+  try{
+    const snap = data.snapshot || {};
+    if(!snap.owner || !snap.name) return;
+    const path = '/' + encodeURIComponent(snap.owner) + '/' + encodeURIComponent(snap.name);
+    if(location.pathname !== path) window.history.pushState({}, '', path);
+  }catch(e){ /* URL 同步失败不影响报告展示 */ }
 }
 
 function render(data, fromHistory){
@@ -571,6 +610,162 @@ async function optimize(){
   }
 }
 
+async function applyOptimize(){
+  const url = $('url').value.trim();
+  if(!url){ $('error').textContent = '请输入仓库 URL。'; $('error').style.display = 'block'; return; }
+  const res = $('optResult');
+  if($('optKeyHint').style.display !== 'none'){
+    res.textContent = '';
+    const err = el('div','error'); err.style.display = 'block';
+    err.textContent = '未配置 REPO_SEO_API_KEY，一键优化不可用。请在 .env 中配置 REPO_SEO_API_KEY（可配合 REPO_SEO_BASE_URL、REPO_SEO_MODEL）后重启容器。';
+    res.appendChild(err);
+    return;
+  }
+  const planBtn = $('optBtn'), applyBtn = $('applyBtn');
+  planBtn.disabled = true; applyBtn.disabled = true;
+  res.textContent = '';
+  const loading = el('div','opt-loading');
+  loading.appendChild(el('div','spinner'));
+  loading.appendChild(el('span','','正在扫描、生成修改并写入本地工作区…（约 60–120 秒）'));
+  res.appendChild(loading);
+  try{
+    const resp = await fetch('/api/optimize/apply', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({url})
+    });
+    const data = await resp.json();
+    if(!resp.ok){
+      const err = new Error(data.error || `HTTP ${resp.status}`);
+      err.readOnly = !!data.read_only;
+      throw err;
+    }
+    renderApply(data);
+  }catch(e){
+    res.textContent = '';
+    const err = el('div','error'); err.style.display = 'block';
+    err.textContent = '一键应用失败：' + e.message + (e.readOnly ? ' 可改用「生成具体修改内容」查看只读建议。' : '');
+    res.appendChild(err);
+  }finally{
+    planBtn.disabled = false; applyBtn.disabled = false;
+  }
+}
+
+function renderApply(data){
+  const res = $('optResult'); res.textContent = '';
+  const repo = data.repository || {};
+  const applied = data.applied || [];
+  const skipped = data.skipped || [];
+  const manual = data.manual || [];
+  const plan = data.plan || {};
+
+  const banner = el('div','apply-banner');
+  const line = el('div','');
+  line.appendChild(el('b','', String(applied.length)));
+  line.appendChild(document.createTextNode(' 个文件已写入本地副本（未 commit / 未 push）'));
+  banner.appendChild(line);
+  banner.appendChild(el('div','apply-meta',
+    `${repo.full_name || ''} · 分支 ${repo.branch || '-'} · ${repo.reused ? '复用已有副本' : '已重新下载'} · ${repo.workspace || ''}`));
+  if(data.readme_error){
+    const warn = el('div','apply-banner warn','README 自动生成失败，已跳过 README，仅应用其他文件：' + data.readme_error);
+    res.appendChild(warn);
+  }
+  res.appendChild(banner);
+
+  if(plan.summary) res.appendChild(el('div','opt-summary','【总结】' + plan.summary));
+  if(plan.estimated_gain !== null && plan.estimated_gain !== undefined){
+    res.appendChild(el('div','opt-gain','预估可提升：约 ' + plan.estimated_gain + ' 分'));
+  }
+
+  if(applied.length){
+    const sec = el('div','apply-section');
+    sec.appendChild(el('div','apply-section-title','已应用'));
+    applied.forEach(f => {
+      const row = el('div','apply-file');
+      row.appendChild(el('code','', f.path));
+      row.appendChild(el('span','apply-tag ' + (f.created ? 'created' : 'updated'), f.created ? '新建' : '更新'));
+      row.appendChild(el('span','apply-reason', (f.bytes || 0) + ' bytes'));
+      sec.appendChild(row);
+    });
+    res.appendChild(sec);
+  } else {
+    res.appendChild(el('div','note','没有写入任何文件。'));
+  }
+
+  if(skipped.length){
+    const sec = el('div','apply-section');
+    sec.appendChild(el('div','apply-section-title','已跳过'));
+    skipped.forEach(f => {
+      const row = el('div','apply-file');
+      row.appendChild(el('code','', f.path));
+      row.appendChild(el('span','apply-tag skipped','跳过'));
+      row.appendChild(el('span','apply-reason', f.reason || ''));
+      sec.appendChild(row);
+    });
+    res.appendChild(sec);
+  }
+
+  if(manual.length){
+    const sec = el('div','apply-section');
+    sec.appendChild(el('div','apply-section-title','需手动处理'));
+    manual.forEach(f => {
+      const row = el('div','apply-file');
+      row.appendChild(el('span','apply-tag manual', TYPE_LABELS[f.type] || f.type || 'manual'));
+      row.appendChild(el('code','', f.target || ''));
+      row.appendChild(el('span','apply-reason', f.reason || f.what || ''));
+      sec.appendChild(row);
+      if(f.concrete){
+        const detail = el('details','apply-detail');
+        detail.appendChild(el('summary','','查看具体内容'));
+        if(f.what) detail.appendChild(el('div','opt-what','【做什么】' + f.what));
+        detail.appendChild(renderConcrete(f.concrete));
+        sec.appendChild(detail);
+      }
+    });
+    res.appendChild(sec);
+  }
+
+  if(data.diff){
+    const sec = el('div','apply-section');
+    sec.appendChild(el('div','apply-section-title','Unified diff'));
+    sec.appendChild(renderDiff(data.diff, data.diff_truncated));
+    res.appendChild(sec);
+  }
+
+  window.scrollTo({top: res.offsetTop - 12, behavior:'smooth'});
+}
+
+function renderDiff(text, truncated){
+  const box = el('div','opt-code');
+  const head = el('div','code-head');
+  head.appendChild(el('span','code-lang','unified diff' + (truncated ? ' · 已截断' : '')));
+  const copy = el('button','code-copy','复制 diff');
+  copy.addEventListener('click', () => {
+    navigator.clipboard.writeText(text).then(() => {
+      copy.textContent = '已复制';
+      setTimeout(() => { copy.textContent = '复制 diff'; }, 1500);
+    }).catch(() => { copy.textContent = '复制失败'; });
+  });
+  head.appendChild(copy);
+  const pre = el('pre','code-body diff-body');
+  text.split('\n').forEach(line => {
+    const span = el('span','diff-line');
+    if(line.startsWith('+++') || line.startsWith('---') || line.startsWith('diff ')){
+      span.classList.add('diff-meta');
+    } else if(line.startsWith('@@')){
+      span.classList.add('diff-hunk');
+    } else if(line.startsWith('+')){
+      span.classList.add('diff-add');
+    } else if(line.startsWith('-')){
+      span.classList.add('diff-del');
+    }
+    span.textContent = line || ' ';
+    pre.appendChild(span);
+  });
+  box.appendChild(head); box.appendChild(pre);
+  return box;
+}
+
 function renderOptimize(data){
   const res = $('optResult'); res.textContent = '';
   const layout = el('div','opt-layout');
@@ -670,12 +865,64 @@ function switchTab(name){
 $('scanBtn').addEventListener('click', scan);
 $('url').addEventListener('keydown', e => { if(e.key === 'Enter') scan(); });
 $('optBtn').addEventListener('click', optimize);
+$('applyBtn').addEventListener('click', applyOptimize);
 $('tabBtnScore').addEventListener('click', () => switchTab('score'));
 $('tabBtnOpt').addEventListener('click', () => switchTab('opt'));
 $('histBack').addEventListener('click', e => {
   e.preventDefault();
   if(window.__latestData){ render(window.__latestData, true); $('histHint').style.display = 'none'; }
 });
+
+/* ---- 深链：访问 /owner/repo 直接浏览该仓库最近一次体检报告 ---- */
+function parseRepoPath(){
+  const m = location.pathname.match(/^\/([^\/]+)\/([^\/]+)\/?$/);
+  if(!m) return null;
+  const owner = decodeURIComponent(m[1]);
+  const repo = decodeURIComponent(m[2]);
+  if(owner.toLowerCase() === 'api') return null;   // 与后端保留前缀保持一致
+  const seg = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
+  if(!seg.test(owner) || !seg.test(repo)) return null;
+  return {owner, repo};
+}
+
+async function loadLastReport(owner, repo){
+  /* 读取历史列表 → 取最后一条保存了完整报告的记录 → 取其完整报告 */
+  const base = `/api/history/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`;
+  const listResp = await fetch(base);
+  if(!listResp.ok) return null;
+  const list = await listResp.json();
+  const withReport = (list.records || []).filter(r => r.has_report);
+  if(!withReport.length) return null;
+  const last = withReport[withReport.length - 1];
+  const detailResp = await fetch(`${base}/${last.index}`);
+  const detail = await detailResp.json();
+  if(!detailResp.ok) throw new Error(detail.error || `HTTP ${detailResp.status}`);
+  return {detail, meta: last};
+}
+
+async function bootFromPath(){
+  const p = parseRepoPath();
+  if(!p) return;
+  $('url').value = `https://github.com/${p.owner}/${p.repo}`;
+  $('error').style.display = 'none';
+  $('loading').style.display = 'flex';
+  $('loadText').textContent = '正在读取最近一次体检报告…';
+  let saved = null;
+  try{ saved = await loadLastReport(p.owner, p.repo); }
+  catch(e){ saved = null; }
+  if(saved){
+    window.__latestData = saved.detail;
+    $('histVersionLabel').textContent = formatTime(saved.meta.at) + ' · ' + saved.meta.total.toFixed(1) + ' 分';
+    $('histHint').style.display = 'block';
+    render(saved.detail, true);
+    loadHistory(p.owner, p.repo);
+    return;
+  }
+  await scan();  // 无历史记录 → 回退为直接体检
+}
+
+window.addEventListener('popstate', () => { bootFromPath(); });
+bootFromPath();
 </script>
 </body>
 </html>

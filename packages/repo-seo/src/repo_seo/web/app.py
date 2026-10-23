@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import dataclasses
 import os
+import re
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -20,7 +21,17 @@ from pydantic import BaseModel
 from ..advice import generate_advice
 from ..advice.llm import DEFAULT_BASE_URL, DEFAULT_MODEL, LLMClient, LLMError
 from ..advice.optimize import generate_optimize_plan, optimize_plan_to_dict
-from ..fetcher import RateLimitError, RepoNotFoundError, fetch_snapshot, parse_github_url
+from ..advice.readme_gen import generate_readme_draft
+from ..advice.workspace import apply_plan, check_write_access, ensure_repo_copy, repo_lock
+from ..fetcher import (
+    FetchError,
+    GitHubAPI,
+    RateLimitError,
+    RepoNotFoundError,
+    fetch_snapshot,
+    parse_github_url,
+)
+from ..model import EvidenceStatus
 from ..scoring import score_snapshot
 from ..trend import DimensionSnapshot, HistoryStore, SnapshotRecord, analyze_trend
 from ..verify import run_external_verification
@@ -42,6 +53,11 @@ class ScanRequest(BaseModel):
 
 class OptimizeRequest(BaseModel):
     url: str
+
+
+class ApplyRequest(BaseModel):
+    url: str
+    refresh: bool = False
 
 
 def _make_llm() -> LLMClient | None:
@@ -239,3 +255,148 @@ def api_optimize(req: OptimizeRequest) -> JSONResponse:
         return JSONResponse({"error": str(e)}, status_code=502)
 
     return JSONResponse(optimize_plan_to_dict(plan))
+
+
+@app.post("/api/optimize/apply")
+def api_optimize_apply(req: ApplyRequest) -> JSONResponse:
+    """一键优化并应用：只改本地工作区副本，不 commit / 不 push。
+
+    仅允许 Token 有 push 权限的仓库（自己的仓库）；其他仓库返回 403，
+    前端回退到只读「生成修改清单」。
+    """
+    try:
+        owner, repo = parse_github_url(req.url)
+    except ValueError as e:
+        return JSONResponse({"error": f"URL 解析失败：{e}"}, status_code=400)
+
+    token = os.environ.get("GITHUB_TOKEN")
+    if not token:
+        return JSONResponse(
+            {
+                "error": (
+                    "未配置 GITHUB_TOKEN，无法验证仓库写权限。"
+                    "请配置一个对目标仓库有 push 权限的 Token 后重试；"
+                    "或使用「生成修改清单」查看只读建议。"
+                ),
+                "read_only": True,
+            },
+            status_code=403,
+        )
+
+    api = GitHubAPI(token=token)
+    try:
+        access = check_write_access(api, f"{owner}/{repo}")
+    except RepoNotFoundError as e:
+        return JSONResponse({"error": str(e)}, status_code=404)
+    except RateLimitError as e:
+        return JSONResponse({"error": str(e)}, status_code=429)
+    except FetchError as e:
+        return JSONResponse({"error": str(e)}, status_code=502)
+
+    if not access.can_write:
+        return JSONResponse(
+            {
+                "error": access.reason,
+                "read_only": True,
+                "repository": {
+                    "owner": owner,
+                    "repo": repo,
+                    "full_name": f"{owner}/{repo}",
+                    "branch": access.default_branch,
+                },
+            },
+            status_code=403,
+        )
+
+    llm = _make_llm()
+    if llm is None:
+        return JSONResponse(
+            {
+                "error": (
+                    "未配置 REPO_SEO_API_KEY。一键应用需要调用 LLM 生成修改内容，"
+                    "请先在 .env / 环境变量中配置 REPO_SEO_API_KEY（可配合 REPO_SEO_BASE_URL、REPO_SEO_MODEL）。"
+                )
+            },
+            status_code=400,
+        )
+
+    try:
+        snap, report = _scan_for(req.url)
+        plan = generate_optimize_plan(snap, report, llm)
+        adv = generate_advice(snap, report.results, llm)
+
+        # README 影响 readme 与 aeo 两个维度；只要相关规则有失分或清单要求改 README，
+        # 就重新生成一份（事实来自快照，禁止编造）。
+        needs_readme = any(a.type == "readme" for a in plan.actions) or any(
+            r.status == EvidenceStatus.FAIL and r.dimension in ("readme", "aeo")
+            for r in report.results
+        )
+        readme_content: str | None = None
+        readme_error: str | None = None
+        if needs_readme:
+            try:
+                readme_content = generate_readme_draft(
+                    snap, report.results, adv.advices, llm
+                ).content
+            except LLMError as e:
+                readme_error = str(e)
+
+        with repo_lock(owner, repo):
+            repo_dir, reused = ensure_repo_copy(
+                api,
+                owner,
+                repo,
+                access.default_branch,
+                refresh=req.refresh,
+            )
+            outcome = apply_plan(repo_dir, plan, readme_content=readme_content)
+    except RepoNotFoundError as e:
+        return JSONResponse({"error": str(e)}, status_code=404)
+    except RateLimitError as e:
+        return JSONResponse({"error": str(e)}, status_code=429)
+    except LLMError as e:
+        return JSONResponse({"error": str(e)}, status_code=502)
+    except FetchError as e:
+        return JSONResponse({"error": str(e)}, status_code=502)
+    except Exception as e:
+        return JSONResponse({"error": f"{type(e).__name__}: {e}"}, status_code=500)
+
+    return JSONResponse(
+        {
+            "repository": {
+                "owner": owner,
+                "repo": repo,
+                "full_name": snap.full_name,
+                "branch": access.default_branch,
+                "workspace": str(repo_dir),
+                "reused": reused,
+            },
+            "read_only": False,
+            "readme_generated": readme_content is not None,
+            "readme_error": readme_error,
+            "plan": optimize_plan_to_dict(plan),
+            "applied": outcome.applied,
+            "skipped": outcome.skipped,
+            "manual": outcome.manual,
+            "diff": outcome.diff,
+            "diff_truncated": outcome.diff_truncated,
+        }
+    )
+
+
+# ---- 深链 SPA 路由（必须放在所有具体路由之后） ----
+# 访问 /{owner}/{repo} 返回单页应用，前端据此直接浏览该仓库最近一次体检报告。
+_SPA_SEGMENT_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
+_SPA_RESERVED_OWNERS = frozenset({"api", "static", "docs", "redoc", "openapi.json"})
+
+
+@app.get("/{owner}/{repo}", response_model=None)
+def spa_repo(owner: str, repo: str) -> FileResponse | JSONResponse:
+    """深链入口：/owner/repo 返回单页应用（不匹配的保留前缀 / 非法字符给 404 JSON）。"""
+    if (
+        owner.lower() in _SPA_RESERVED_OWNERS
+        or not _SPA_SEGMENT_RE.match(owner)
+        or not _SPA_SEGMENT_RE.match(repo)
+    ):
+        return JSONResponse({"error": "Not Found"}, status_code=404)
+    return FileResponse(STATIC_DIR / "index.html")
