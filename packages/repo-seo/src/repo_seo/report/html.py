@@ -139,8 +139,9 @@ def render_html(
   <div class="sug">建议：{_escape(adv.suggestion)}</div>
   {example}
 </div>""")
+        advice_rows = "\n".join(rows)
         advice_html = f"""<h2>优化建议（{_escape(label)}）</h2>
-<div class="card">{"\n".join(rows)}</div>"""
+<div class="card">{advice_rows}</div>"""
 
     # 证据表
     fails = [r for r in report.results if r.status == EvidenceStatus.FAIL]
@@ -154,9 +155,10 @@ def render_html(
                 f"<div class='ev'>{_escape(r.reason)}</div>{example}</td>"
                 f"<td>{r.score_earned:.1f} / {r.score:.0f}</td></tr>"
             )
+        evidence_rows = "\n".join(rows)
         evidence_table = f"""<h2>扣分项证据清单</h2>
 <table><thead><tr><th>规则</th><th>检查项 / 证据 / 原因</th><th>得分</th></tr></thead>
-<tbody>{"\n".join(rows)}</tbody></table>"""
+<tbody>{evidence_rows}</tbody></table>"""
     else:
         evidence_table = '<h2>扣分项证据清单</h2><div class="card">（无扣分项）</div>'
 
