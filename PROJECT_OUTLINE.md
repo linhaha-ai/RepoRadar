@@ -48,7 +48,11 @@
 - **Google 收录检查**（已实现）：`--verify` 通过 Google Custom Search API（`GOOGLE_CSE_API_KEY` / `GOOGLE_CSE_ID`）核验；未配置 → 无法检测，不误判为未收录；
 - **多模型 AEO 实测**（已实现）：对 `REPO_SEO_PROBE_MODELS` 配置的模型查询项目是否被提及/引用；
 - **分项趋势监控**（已实现）：`monitor` 定时体检 + `trend` 历史曲线；
-- **Web 界面**（已实现）：FastAPI + 单页，含扫描、一键优化、历史回溯。
+- **Web 界面**（已实现）：FastAPI + 单页，含扫描、一键优化（清单 + 本地应用 + diff + 清单末版回看）、历史回溯。
+
+### V2.3（本地一键应用，已实现）
+- Web `POST /api/optimize/apply`：校验 Token 写权限 → tarball 建立本地副本 → 写 README + 白名单文件 → 返回 unified diff，**不 commit / 不 push**；
+- 非本人仓库只读回退；工作区挂载命名卷 `repo-seo-workspaces`；同一仓库下载 + 应用串行化。
 
 ### 尚未实现（明确的后续项）
 - **更多原生 AEO 服务商接入**（当前仅 OpenAI 兼容端点）；
@@ -289,11 +293,12 @@ github-seo/                      # 本项目根目录（E:\code-workspace\ai-cod
 │       │   ├── scoring/         # scorer.py（加权聚合 + 三状态动态分母）
 │       │   ├── advice/          # llm.py / prompts.py / schema.py / templates.py / orchestrator.py
 │       │   │                    #   + readme_gen.py（--readme-draft）/ optimize.py（一键优化）
+│       │   │                    #   + workspace.py（本地副本 / 一键应用 / diff）
 │       │   ├── report/          # terminal.py / markdown.py / html.py
 │       │   ├── trend/           # history.py / trend.py / report.py（monitor / trend）
 │       │   ├── verify/          # google.py / aeo_probe.py / orchestrator.py
 │       │   └── web/             # app.py + static/index.html（FastAPI 单页）
-│       ├── tests/               # pytest：98 个测试函数
+│       ├── tests/               # pytest：109 个测试函数
 │       ├── examples/            # 示例报告 / 自定义配置 / RepoRadar 实测产物
 │       ├── Dockerfile           # python:3.11-slim，非 root，HEALTHCHECK
 │       └── pyproject.toml
@@ -322,7 +327,7 @@ github-seo/                      # 本项目根目录（E:\code-workspace\ai-cod
 
 - **单元测试**：每条规则 ≥ 2 个用例（通过/失败），外部证据类规则另测 N/A 与 unknown 状态；
 - **集成测试**：真实仓库 3 个——RepoRadar（私有 + Token）+ 1 个高排名公开标杆 + 1 个普通公开仓库；
-- **端到端验收清单**（2026-10-22 复核：依据实现代码、98 个测试函数与 `examples/` 产物勾选；本机未安装 Python，`pytest` 未实际执行，建议在 Python 3.11+ 环境复跑确认）：
+- **端到端验收清单**（2026-10-23 复核：依据实现代码、117 个测试函数与 `examples/` 产物勾选；全套 124 个用例已在 Python 3.11 + Docker 环境通过）：
   - [x] `repo-seo scan <url>`（带/不带 Token）输出报告（响应时间依赖网络，未作为本次验收项）；
   - [x] 每个检查项含证据位置 + 扣分原因 + 修复建议；
   - [x] 硬性规则与语义判断明确标记，语义结果带置信度；
@@ -349,7 +354,7 @@ github-seo/                      # 本项目根目录（E:\code-workspace\ai-cod
 
 ## 14. 后续扩展路线图
 
-1. **AI 一键改写（V2）**：✅ 已实现 —— `--readme-draft` 生成 README 草稿，Web `/api/optimize` 输出一键优化清单；
+1. **AI 一键改写（V2/V2.3）**：✅ 已实现 —— `--readme-draft` 生成 README 草稿；Web `/api/optimize` 输出清单，`/api/optimize/apply` 在本地工作区应用并返回 diff（不 commit / push）；
 2. **多模型 AEO 实测**：✅ 已实现 —— `--verify` + `REPO_SEO_PROBE_MODELS`；
 3. **Google 收录监控**：✅ 已实现 —— `--verify`（Google Custom Search API）核验收录状态；
 4. **定时趋势**：✅ 已实现 —— `monitor` 定时体检 + `trend` 历史曲线与 SVG；

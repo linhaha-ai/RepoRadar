@@ -2,7 +2,7 @@
 
 **Languages / 语言：** [English](README.md) | [简体中文](README_zh-CN.md)
 
-RepoRadar is a Python CLI tool that scores any GitHub repository's discoverability (0–100) across GitHub native search and LLM retrieval pipelines, then delivers evidence-backed remediation guidance so open-source projects become easier to find, understand, and correctly cited. Designed for maintainers who want measurable **GitHub search optimization** without hiring an SEO agency, it applies 29 deterministic rules across six dimensions—README quality, metadata, AI retrieval readiness, search discoverability, engineering health, and project activity—so you get exactly what's missing and why. Whether you are launching a new package or reviving a dormant repo, RepoRadar gives you a clear **AEO** (Answer Engine Optimization) roadmap: score, diagnose, fix, and verify. Built on Python 3.11+ with httpx-based three-tier fetching (REST API / raw / web fallback), optional OpenAI-compatible LLM recommendation generation, and comprehensive unit test coverage, it runs entirely locally and integrates naturally into CI or developer workflows. This repository itself is scored at 16.5/100 by RepoRadar, proving the tool's diagnostic honesty.
+RepoRadar is a Python CLI tool that scores any GitHub repository's discoverability (0–100) across GitHub native search and LLM retrieval pipelines, then delivers evidence-backed remediation guidance so open-source projects become easier to find, understand, and correctly cited. Designed for maintainers who want measurable **GitHub search optimization** without hiring an SEO agency, it applies 29 deterministic rules across six dimensions—README quality, metadata, AI retrieval readiness, search discoverability, engineering health, and project activity—so you get exactly what's missing and why. Whether you are launching a new package or reviving a dormant repo, RepoRadar gives you a clear **AEO** (Answer Engine Optimization) roadmap: score, diagnose, fix, and verify. Built on Python 3.11+ with httpx-based three-tier fetching (REST API / raw / web fallback), optional OpenAI-compatible LLM recommendation generation, and comprehensive unit test coverage, it runs entirely locally and integrates naturally into CI or developer workflows. This repository itself is currently scored at 73.3/100 by RepoRadar, reflecting the tool's diagnostic honesty.
 ## Overview
 
 RepoRadar addresses a critical but under-metricized problem: most open-source projects are invisible to both traditional search engines and modern AI answer engines because their READMEs, metadata, and documentation signals are incomplete or misstructured. Unlike generic SEO audits, RepoRadar is purpose-built for repository discoverability—treating README content, code structure, topics, license, and activity as ranked signals that both human searchers and LLM retrieval systems depend on.
@@ -20,7 +20,10 @@ The tool outputs a **score + evidence report** where every deduction includes th
 - **`--json` structured export** containing per-rule evidence, scores, and fix suggestions for programmatic consumption
 - **Three-tier fetcher**: GitHub REST API → raw content → HTML page fallback, maximising coverage when endpoints are unavailable
 - **Private repo support** via `GITHUB_TOKEN` environment variable
-- **98 passing unit tests** across fetcher, rule, scoring, AI-suggestion, report, config, verification, and trend modules
+- **One-click apply (Web UI)**: downloads your repository into a local workspace, rewrites the README, creates missing safe docs, and returns a reviewable unified diff — no commit or push
+- **Shareable deep links**: opening `http://localhost:8000/owner/repo` loads that repository's most recent saved report instantly (auto-scans on first visit); after each scan the address bar syncs to `/owner/repo`
+- **Last optimize plan persisted per repo**: the 一键优化 tab instantly re-displays the most recent generated plan (timestamped, no LLM re-call); a fresh generation overwrites the stored one
+- **124 passing tests** across fetcher, rule, scoring, AI-suggestion, report, config, verification, workspace, trend, and web-routing modules
 
 ## Installation
 
@@ -69,6 +72,7 @@ Optional: copy `.env.example` to `.env` and fill in the keys (the compose file r
 Notes:
 
 - Scan history persists in the named volume `repo-seo-history`, so container rebuilds do not lose data.
+- Local one-click apply workspaces persist in the named volume `repo-seo-workspaces`.
 - Stop and remove the container with `docker compose down` (the volume is kept by default).
 - Environment variable precedence: host shell > `.env` > compose defaults.
 
@@ -104,6 +108,19 @@ repo-seo scan owner/repo --json report.json
 REPO_SEO_API_KEY=sk-xxx REPO_SEO_BASE_URL=https://api.example.com/v1 REPO_SEO_MODEL=example-model \
 repo-seo scan owner/repo --ai
 ```
+
+### Apply fixes locally (Web UI)
+
+Open the Web UI, scan your repository, then click **一键优化并应用** (One-click optimize & apply). RepoRadar:
+
+1. verifies that `GITHUB_TOKEN` has push access to the repository (own repos only; otherwise it falls back to a read-only plan);
+2. downloads a tarball snapshot into `REPO_SEO_WORKSPACE_DIR` (no local git required) and reuses the existing copy unless `refresh` is requested;
+3. writes an AI-generated README and creates missing allow-listed files (`CONTRIBUTING.md`, `SECURITY.md`, `.gitignore`, `.github/*`, etc.);
+4. returns `applied / skipped / manual` lists plus a **unified diff** rendered in the browser.
+
+Safety: **local files only — never commit or push**; the README is rewritten, while existing allow-listed files are skipped; LICENSE is never auto-generated; path traversal and symlinks are rejected during extraction.
+
+API: `POST /api/optimize/apply` with `{"url": "owner/repo", "refresh": false}`.
 
 ## Scoring Model
 
@@ -153,6 +170,7 @@ See the [Installation](#installation) and [Usage](#usage) sections above. Clone 
 - **Static audit only**: scores reflect content optimization readiness, not live search or ranking positions. External verification is provided via `--verify` (Google indexing check + multi-model AEO probes).
 - **Private repositories are inherently limited in discoverability**: even with a valid scan, GitHub search and AI crawlers cannot index private content, so discoverability scores will be lower by design.
 - **AI suggestions require an API key**: the `--ai` flag needs a configured OpenAI-compatible key. Without one, the tool still produces accurate rule-based scores and template recommendations—just without LLM-generated narrative text.
+- **One-click apply is local-only**: it modifies a workspace copy, does not commit or push, only creates allow-listed files, and requires a `GITHUB_TOKEN` with push access to the target repository.
 - **PyPI availability**: the package is distributed via source installation at present; a formal `pip install repo-seo` release is on the roadmap but not yet published.
 - **External crawling coverage**: the three-tier fetcher (REST API → raw → web) maximises reach, but some repositories may have rate-limited or restricted endpoints that cause partial data loss.
 

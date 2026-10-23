@@ -19,7 +19,7 @@ $env:GITHUB_TOKEN = "ghp_xxx"
 repo-seo scan owner/repo
 ```
 
-## 当前状态（M1–M5 + V2 ✅）
+## 当前状态（M1–M5 + V2 + V2.3 ✅）
 
 - [x] URL 解析（https / git@ / owner-repo）
 - [x] GitHub API 抓取（Token 支持、限流诊断、私有仓库）
@@ -28,7 +28,7 @@ repo-seo scan owner/repo
 - [x] CLI 端到端实测（私有仓库 + Token）
 - [x] 规则引擎 29 条（6 维度：R/M/A/D/H/AC）+ 证据生成
 - [x] 评分 2.0：加权聚合、三状态（N/A/UNKNOWN 剔除分母）、P0/P1/P2、Top3 修复问题
-- [x] 终端评分报告（RepoRadar 实测 16.5/100）
+- [x] 终端评分报告（RepoRadar 当前实测 73.3/100）
 - [x] AI 优化建议模块（M3.5）：OpenAI 兼容 LLM 客户端 + Prompt + schema 校验 + 模板降级；无 Key 时自动用规则模板
 - [x] README 草稿生成（--readme-draft）
 - [x] Markdown / HTML 报告导出（--report-md / --report-html，HTML 单文件自包含）
@@ -36,6 +36,7 @@ repo-seo scan owner/repo
 - [x] 外部验证层 V2（--verify：Google 收录核验 + 多模型 AEO 实测）
 - [x] 趋势监控 V2.2（monitor 定时体检 + trend 历史曲线，SVG/终端/MD/HTML）
 - [x] Web 前端（FastAPI + 单页：输入 URL → 可视化报告）
+- [x] 本地工作区 + 一键应用修改（V2.3：tarball 副本 / 写权限校验 / README + 白名单文件 / unified diff）
 - [ ] 更多 AEO 服务商接入
 
 ## AI 优化建议（M3.5）
@@ -68,6 +69,27 @@ repo-seo scan owner/repo --readme-draft --readme-out README.md   # 指定路径
 - 落实 R01-R05 / A01-A05 / D05 共 11 条 README 相关建议；
 - 无 LLM Key 时明确报错（不静默降级）；
 - 对 RepoRadar 自身扫描时会注入真实 CLI/安装/环境变量事实（自举验证）。
+
+## 一键优化并应用（V2.3 · Web UI）
+
+Web 界面中点击「一键优化并应用」后：
+
+1. 校验 `GITHUB_TOKEN` 对目标仓库是否有 push 权限（仅允许自己的仓库；其他仓库返回只读提示）；
+2. 通过 GitHub tarball 下载仓库副本到本地工作区（容器内无需 git），已存在副本默认复用；
+3. 用 AI 生成 README 草稿并写入，同时新建白名单内的缺失文件（`CONTRIBUTING.md`、`SECURITY.md`、`.gitignore`、`.github/*` 等）；
+4. 返回 `applied / skipped / manual` 与 **unified diff**，前端按 `+` / `-` 着色展示。
+
+安全边界：**只改本地副本，不 commit / 不 push**；README 会重写，白名单文件只在缺失时新建、不覆盖已有文件；不自动生成 LICENSE；元数据与仓库设置列入 `manual` 由人工修改；路径穿越与符号链接在解压阶段被拒绝。
+
+```bash
+pip install -e ".[web]"
+export REPO_SEO_WORKSPACE_DIR=.repo-seo-workspaces   # 可选，默认当前目录
+export GITHUB_TOKEN=ghp_xxx                          # 需要目标仓库 push 权限
+export REPO_SEO_API_KEY=sk-xxx                       # 需要 LLM
+uvicorn repo_seo.web.app:app --port 8000
+```
+
+API：`POST /api/optimize/apply`，请求 `{"url": "owner/repo", "refresh": false}`；`refresh=true` 强制重新下载副本。
 
 ## 报告导出（--report-md / --report-html）
 
@@ -142,8 +164,10 @@ uvicorn repo_seo.web.app:app --port 8000 --host 127.0.0.1
 # 浏览器打开 http://127.0.0.1:8000
 ```
 
-- 单页应用（零外部依赖，纯 CSS/SVG）：输入仓库 URL → 总分 + 六维度条形图 + Top3 修复 + 证据表 + AI 建议 + 外部验证 + 历史趋势；
-- API：`POST /api/scan`（`{url, ai, verify}`）、`GET /`；Token / API Key 一律从环境变量读取，不经过前端。
+- 单页应用（零外部依赖，纯 CSS/SVG）：输入仓库 URL → 总分 + 六维度条形图 + Top3 修复 + 证据表 + AI 建议 + 外部验证 + 历史趋势 + 一键优化；
+- 深链直达：浏览器访问 `/{owner}/{repo}` 直接浏览该仓库最近一次体检报告（无历史记录则自动发起体检）；体检成功后地址栏同步为 `/{owner}/{repo}`，可直接分享 / 收藏；
+- 修改清单末版回看：「一键优化」标签页秒级回显该仓库最近一次生成的修改清单（带生成时间提示，不重新调用 AI）；重新生成即覆盖旧版（仅保留最后一版）；
+- API：`POST /api/scan`（`{url, ai, verify}`）、`POST /api/optimize`（只读清单，成功即保存末版）、`POST /api/optimize/apply`（本地应用 + diff）、`GET /api/optimize/last/{owner}/{repo}`（最近一次修改清单）、`GET /` 与 `GET /{owner}/{repo}`（单页入口）；Token / API Key 一律从环境变量读取，不经过前端。
 
 ## Docker 部署
 
@@ -156,7 +180,7 @@ docker compose up -d --build
 ```
 
 - `Dockerfile`：python:3.11-slim，非 root 用户运行，HEALTHCHECK 健康检查；
-- `docker-compose.yml`：端口 8000，环境变量从宿主 / `.env` 注入（GITHUB_TOKEN / AGNES / Google CSE），趋势历史存命名卷 `repo-seo-history`（重建容器不丢失）；
+- `docker-compose.yml`：端口 8000，环境变量从宿主 / `.env` 注入（GITHUB_TOKEN / AGNES / Google CSE），趋势历史存命名卷 `repo-seo-history`，一键应用工作区存命名卷 `repo-seo-workspaces`（重建容器均不丢失）；
 - `.env.example`：密钥模板（**不要提交真实密钥到 git**）。
 
 ## 开发

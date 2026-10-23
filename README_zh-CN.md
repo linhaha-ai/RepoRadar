@@ -2,7 +2,7 @@
 
 **语言 / Languages：** [简体中文](README_zh-CN.md) | [English](README.md)
 
-RepoRadar 是一个 Python CLI 工具，用于对任意 GitHub 仓库的可发现性进行 0–100 分评分，覆盖 GitHub 原生搜索和 LLM 检索管线，并输出基于证据的修复建议，帮助开源项目更容易被发现、理解和被正确引用。RepoRadar 专为希望获得可衡量的 **GitHub 搜索优化**、又不想聘请 SEO 机构维护者设计：它跨六个维度应用 29 条确定性规则——README 质量、仓库元数据、AI 检索就绪度、搜索可发现性、工程健康度、项目活跃度——让你准确知道缺什么、为什么缺。无论是发布新包还是重振休眠仓库，RepoRadar 都能给你一条清晰的 **AEO**（答案引擎优化）路线图：评分、诊断、修复、验证。基于 Python 3.11+，采用 httpx 三层抓取（REST API / raw / 网页兜底），可选兼容 OpenAI 的 LLM 建议生成，并具备完善的单元测试覆盖；完全本地运行，可自然集成到 CI 或开发者工作流。本仓库自身被 RepoRadar 评分为 16.5/100，这证明了工具诊断的诚实性。
+RepoRadar 是一个 Python CLI 工具，用于对任意 GitHub 仓库的可发现性进行 0–100 分评分，覆盖 GitHub 原生搜索和 LLM 检索管线，并输出基于证据的修复建议，帮助开源项目更容易被发现、理解和被正确引用。RepoRadar 专为希望获得可衡量的 **GitHub 搜索优化**、又不想聘请 SEO 机构维护者设计：它跨六个维度应用 29 条确定性规则——README 质量、仓库元数据、AI 检索就绪度、搜索可发现性、工程健康度、项目活跃度——让你准确知道缺什么、为什么缺。无论是发布新包还是重振休眠仓库，RepoRadar 都能给你一条清晰的 **AEO**（答案引擎优化）路线图：评分、诊断、修复、验证。基于 Python 3.11+，采用 httpx 三层抓取（REST API / raw / 网页兜底），可选兼容 OpenAI 的 LLM 建议生成，并具备完善的单元测试覆盖；完全本地运行，可自然集成到 CI 或开发者工作流。本仓库自身当前被 RepoRadar 评分为 73.3/100，这体现了工具诊断的诚实性。
 
 ## 概览
 
@@ -21,7 +21,8 @@ RepoRadar 解决的是一个关键但缺乏量化指标的问题：大多数开�
 - **`--json` 结构化导出**：包含逐条规则的证据、评分和修复建议，供程序化消费
 - **三层抓取器**：GitHub REST API → raw 内容 → HTML 页面兜底，在端点不可用时最大化覆盖
 - **私有仓库支持**：通过 `GITHUB_TOKEN` 环境变量
-- **98 个通过的单元测试**，覆盖抓取、规则、评分、AI 建议、报告、配置、验证和趋势模块
+- **一键应用修改（Web UI）**：自动下载仓库到本地工作区、重写 README、创建缺失的安全文档，并返回可审阅的 unified diff——不 commit、不 push
+- **124 个通过的测试**，覆盖抓取、规则、评分、AI 建议、报告、配置、验证、工作区、趋势和 Web 路由模块
 
 ## 安装
 
@@ -70,6 +71,7 @@ docker compose up -d --build
 说明：
 
 - 扫描历史保存在命名卷 `repo-seo-history` 中，重建容器不丢失。
+- 一键应用修改的本地工作区保存在命名卷 `repo-seo-workspaces` 中，重建容器不丢失。
 - 停止并移除容器：`docker compose down`（默认保留数据卷）。
 - 环境变量优先级：宿主 shell > `.env` > compose 默认值。
 
@@ -105,6 +107,21 @@ repo-seo scan owner/repo --json report.json
 REPO_SEO_API_KEY=sk-xxx REPO_SEO_BASE_URL=https://api.example.com/v1 REPO_SEO_MODEL=example-model \
 repo-seo scan owner/repo --ai
 ```
+
+### 一键优化并应用（Web UI）
+
+打开 Web 界面扫描自己的仓库，点击 **一键优化并应用**：
+
+1. 校验 `GITHUB_TOKEN` 对目标仓库是否有 push 权限（仅自己的仓库；否则回退为只读清单）；
+2. 通过 tarball 下载仓库副本到 `REPO_SEO_WORKSPACE_DIR`（容器内无需 git），默认复用已有副本；
+3. 写入 AI 生成的 README，并新建白名单内的缺失文件（`CONTRIBUTING.md`、`SECURITY.md`、`.gitignore`、`.github/*` 等）；
+4. 返回 `applied / skipped / manual` 列表与 **unified diff**，在浏览器中按 `+` / `-` 着色展示。
+
+安全边界：**只改本地副本，不 commit / 不 push**；README 会被重写，已存在的白名单文件跳过；不自动生成 LICENSE；解压阶段拒绝路径穿越与符号链接；元数据 / 仓库设置列入 `manual` 由人工修改。
+
+API：`POST /api/optimize/apply`，请求 `{"url": "owner/repo", "refresh": false}`；`refresh=true` 强制重新下载副本。
+
+深链直达：浏览器直接访问 `http://localhost:8000/owner/repo` 可浏览该仓库最近一次体检报告（无历史记录则自动发起体检）；体检成功后地址栏同步为 `/owner/repo`，便于分享与收藏。「一键优化」标签页会秒级回显该仓库最近一次生成的修改清单（标注生成时间，不重新调用 AI）。
 
 ## 评分模型
 
@@ -154,6 +171,7 @@ repo-seo scan owner/repo --ai
 - **仅静态审计**：评分反映内容优化就绪度，而非实时搜索或排名位置。可通过 `--verify` 提供外部验证（Google 索引检查 + 多模型 AEO 探测）。
 - **私有仓库天然在可发现性上受限**：即使扫描成功，GitHub 搜索和 AI 爬虫也无法索引私有内容，因此可发现性评分在设计上会更低。
 - **AI 建议需要 API 密钥**：`--ai` 参数需要配置兼容 OpenAI 的密钥。没有密钥时，工具仍能产出准确的基于规则的评分和模板建议——只是没有 LLM 生成的叙述性文本。
+- **一键应用仅修改本地副本**：不会 commit / push，只新建白名单文件，且需要具有目标仓库 push 权限的 `GITHUB_TOKEN`。
 - **PyPI 可用性**：目前通过源码方式分发；正式的 `pip install repo-seo` 发布已在路线图中，但尚未发布。
 - **外部爬取覆盖**：三层抓取器（REST API → raw → web）尽量扩大覆盖面，但某些仓库可能存在限流或受限端点，导致部分数据缺失。
 
