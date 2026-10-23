@@ -35,6 +35,7 @@ from ..model import EvidenceStatus
 from ..scoring import score_snapshot
 from ..trend import DimensionSnapshot, HistoryStore, SnapshotRecord, analyze_trend
 from ..verify import run_external_verification
+from .plan_store import load_last_plan, save_last_plan
 
 STATIC_DIR = Path(__file__).parent / "static"
 
@@ -254,7 +255,14 @@ def api_optimize(req: OptimizeRequest) -> JSONResponse:
     except LLMError as e:
         return JSONResponse({"error": str(e)}, status_code=502)
 
-    return JSONResponse(optimize_plan_to_dict(plan))
+    plan_dict = optimize_plan_to_dict(plan)
+    try:
+        # 持久化「最后一版」修改清单；键取 snapshot 的 owner/name（与前端
+        # __currentRepo 同一来源，保证回看端按同键命中），保存失败不影响本次返回
+        save_last_plan(snap.owner, snap.name, plan_dict)
+    except (OSError, TypeError, ValueError):
+        pass
+    return JSONResponse(plan_dict)
 
 
 @app.post("/api/optimize/apply")
@@ -361,6 +369,14 @@ def api_optimize_apply(req: ApplyRequest) -> JSONResponse:
     except Exception as e:
         return JSONResponse({"error": f"{type(e).__name__}: {e}"}, status_code=500)
 
+    plan_dict = optimize_plan_to_dict(plan)
+    try:
+        # 应用成功同样持久化「最后一版」修改清单；键同样取 snapshot 的
+        # owner/name（避免用户输入大小写与回看键不一致），保存失败不影响本次返回
+        save_last_plan(snap.owner, snap.name, plan_dict)
+    except (OSError, TypeError, ValueError):
+        pass
+
     return JSONResponse(
         {
             "repository": {
@@ -374,7 +390,7 @@ def api_optimize_apply(req: ApplyRequest) -> JSONResponse:
             "read_only": False,
             "readme_generated": readme_content is not None,
             "readme_error": readme_error,
-            "plan": optimize_plan_to_dict(plan),
+            "plan": plan_dict,
             "applied": outcome.applied,
             "skipped": outcome.skipped,
             "manual": outcome.manual,
@@ -382,6 +398,15 @@ def api_optimize_apply(req: ApplyRequest) -> JSONResponse:
             "diff_truncated": outcome.diff_truncated,
         }
     )
+
+
+@app.get("/api/optimize/last/{owner}/{repo}")
+def api_optimize_last(owner: str, repo: str) -> JSONResponse:
+    """最近一次生成的修改清单（仅保存最后一版，供深链 / 标签页回看）。"""
+    saved = load_last_plan(owner, repo)
+    if saved is None:
+        return JSONResponse({"error": "该仓库尚未生成过修改清单"}, status_code=404)
+    return JSONResponse(saved)
 
 
 # ---- 深链 SPA 路由（必须放在所有具体路由之后） ----

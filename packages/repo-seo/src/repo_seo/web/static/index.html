@@ -299,6 +299,7 @@ code{background:#f1f5f9;border-radius:4px;padding:1px 6px;font-size:12.5px;}
         </div>
         <div class="note" style="margin-top:0">基于当前评分报告与提示词，让 AI 给出可直接落地执行的修改内容：README 改成什么样、缺失哪些文件需要补充、描述 / topics 改成什么。生成后左侧大纲可点击跳转定位。<br>
           <b>一键优化并应用</b>：仅对自己的仓库（Token 有 push 权限）生效——在本地工作区下载仓库副本，写入 README 与安全文档文件，并展示 unified diff；<b>不会自动 commit / push</b>。</div>
+        <div class="note" id="optPlanHint" style="display:none;margin-top:8px"></div>
         <div id="optResult"></div>
       </div>
     </div>
@@ -335,6 +336,8 @@ async function scan(){
   $('error').style.display = 'none';
   $('result').style.display = 'none';
   $('optResult').textContent = '';
+  $('optPlanHint').style.display = 'none';
+  window.__currentRepo = null;
   $('loading').style.display = 'flex';
   $('loadText').textContent = '正在抓取仓库数据…';
   $('scanBtn').disabled = true;
@@ -378,6 +381,7 @@ function syncUrlFromSnapshot(data){
 
 function render(data, fromHistory){
   const s = data.score, snap = data.snapshot;
+  window.__currentRepo = (snap.owner && snap.name) ? {owner: snap.owner, repo: snap.name} : null;
 
   /* meta */
   const mc = $('metaCard'); mc.textContent = '';
@@ -587,6 +591,7 @@ async function optimize(){
   const btn = $('optBtn');
   btn.disabled = true;
   res.textContent = '';
+  $('optPlanHint').style.display = 'none';
   const loading = el('div','opt-loading');
   loading.appendChild(el('div','spinner'));
   loading.appendChild(el('span','','正在调用 AI 生成修改清单…（约 30–60 秒）'));
@@ -624,6 +629,7 @@ async function applyOptimize(){
   const planBtn = $('optBtn'), applyBtn = $('applyBtn');
   planBtn.disabled = true; applyBtn.disabled = true;
   res.textContent = '';
+  $('optPlanHint').style.display = 'none';
   const loading = el('div','opt-loading');
   loading.appendChild(el('div','spinner'));
   loading.appendChild(el('span','','正在扫描、生成修改并写入本地工作区…（约 60–120 秒）'));
@@ -860,6 +866,26 @@ function switchTab(name){
   document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b.dataset.panel === name));
   $('tabScore').style.display = name === 'score' ? 'block' : 'none';
   $('tabOpt').style.display = name === 'opt' ? 'block' : 'none';
+  if(name === 'opt') maybeLoadLastPlan();
+}
+
+async function maybeLoadLastPlan(){
+  /* 一键优化标签页：该仓库生成过修改清单则直接回显最后一版（不重新调用 AI） */
+  const res = $('optResult');
+  if(res.childElementCount) return;   // 已有内容（计划 / 应用结果 / 生成中）
+  const repo = window.__currentRepo;
+  if(!repo) return;
+  try{
+    const resp = await fetch(`/api/optimize/last/${encodeURIComponent(repo.owner)}/${encodeURIComponent(repo.repo)}`);
+    if(!resp.ok) return;
+    const data = await resp.json();
+    if(!data.plan) return;
+    if(res.childElementCount) return; // 竞态：等待期间已有内容
+    const hint = $('optPlanHint');
+    hint.textContent = `已加载 ${formatTime(data.at)} 生成的修改清单（未重新调用 AI）。点击「生成具体修改内容」可重新生成。`;
+    hint.style.display = 'block';
+    renderOptimize(data.plan);
+  }catch(e){ /* 回看失败不影响手动生成 */ }
 }
 
 $('scanBtn').addEventListener('click', scan);
