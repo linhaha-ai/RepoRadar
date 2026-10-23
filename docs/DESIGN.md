@@ -90,6 +90,7 @@ flowchart LR
 | scoring | `src/repo_seo/scoring/` | ✅ M3 | 评分聚合（§7） |
 | report | `src/repo_seo/report/` | ✅ M3 | 报告渲染（§8） |
 | advice | `src/repo_seo/advice/` | ✅ M3.5 | AI 建议生成与模板兜底（§10） |
+| workspace | `src/repo_seo/advice/workspace.py` | ✅ V2.3 | 本地仓库副本、一键应用与 unified diff（§10.10） |
 | verify | `src/repo_seo/verify/` | ✅ V2 | Google 收录、多模型 AEO 实测（§11） |
 
 ---
@@ -517,6 +518,41 @@ repo-seo scan owner/repo --model gpt-4o-mini
 | `REPO_SEO_BASE_URL` | OpenAI 兼容 base_url（豆包 / DeepSeek / OpenAI / Ollama） |
 | `REPO_SEO_MODEL` | 模型名（默认由 base_url 决定） |
 
+### 10.10 本地工作区与一键应用（V2.3 已实现）
+
+把「一键优化」从只读清单升级为可审阅的文件修改：在服务端本地工作区生成仓库副本、写入优化内容，并返回 unified diff。**不提交、不推送**。
+
+```text
+POST /api/optimize/apply { "url": "owner/repo", "refresh": false }
+  → URL 解析
+  → GITHUB_TOKEN 写权限校验（GET /repos/{owner}/{repo} 的 permissions.push，
+     或 Token 用户 == 仓库 owner）
+  → 抓取 + 评分 + LLM 生成优化清单
+  → tarball 下载（GET /repos/{owner}/{repo}/tarball/{branch}）并安全解压
+  → 应用 README 草稿 + 白名单内缺失文件
+  → 生成 unified diff 返回（applied / skipped / manual）
+```
+
+| 约束 | 实现 |
+|---|---|
+| 可写范围 | 仅 `README.md` + 白名单：`CONTRIBUTING.md`、`SECURITY.md`、`CODE_OF_CONDUCT.md`、`SUPPORT.md`、`CHANGELOG.md`、`.gitignore`、`.github/PULL_REQUEST_TEMPLATE.md`、`.github/ISSUE_TEMPLATE.md` |
+| 不覆盖 | 已存在的文件一律跳过（README 除外：按生成内容重写，diff 中可审阅） |
+| 不自动生成 LICENSE | LICENSE 涉及法律文本，交由维护者自行选择 |
+| 元数据 / 仓库设置 | 不写入，返回 `manual` 列表提示在 GitHub 后台修改 |
+| 只读仓库 | 无 Token / 无 push 权限 → HTTP 403 + `read_only: true`，前端回退只读清单 |
+| 路径安全 | owner/repo 严格正则校验；解压拒绝绝对路径、`..`、符号链接/硬链接；写入路径必须位于工作区内 |
+| 资源上限 | 下载 200MB、解压 500MB / 20000 文件 / 单文件 20MB；diff 返回上限 200k 字符 |
+| 并发 | 同一仓库的下载 + 应用按仓库粒度加锁串行执行 |
+| 持久化 | `REPO_SEO_WORKSPACE_DIR`（容器默认 `/app/workspaces`，挂载命名卷 `repo-seo-workspaces`）；`refresh: true` 强制重新下载 |
+| 事实纪律 | README 复用 `readme_gen`（快照事实 + 禁止编造命令/链接/数字） |
+
+工作区布局：
+
+```text
+{REPO_SEO_WORKSPACE_DIR}/{owner}/{repo}/           # 仓库副本（可复用，保留上次修改）
+{REPO_SEO_WORKSPACE_DIR}/{owner}/{repo}.meta.json  # branch / fetched_at / source
+```
+
 ---
 
 ## 11. 测试策略
@@ -525,6 +561,7 @@ repo-seo scan owner/repo --model gpt-4o-mini
 |---|---|
 | 单元（规则） | 每条规则 ≥2 用例（通过/失败），外部证据类另测 N_A / UNKNOWN 两状态；fixture 仓库数据写死可复现 |
 | 单元（抓取） | URL 解析参数化测试；健康信号检测；降级链 mock |
+| 单元（工作区） | 写权限判定（push / owner 回退 / 拒绝）；tarball 安全解压（穿越、符号链接）；README 与白名单文件应用；diff 生成；工作区复用与 refresh |
 | 集成 | 真实仓库 3 个：RepoRadar（私有 + Token）、公开标杆、普通公开仓库 |
 | 验收清单 | 见 `PROJECT_OUTLINE.md` §12，新增：私有仓库 Token 场景端到端；raw 黑洞不阻塞（总预算生效） |
 
@@ -535,12 +572,13 @@ repo-seo scan owner/repo --model gpt-4o-mini
 | 阶段 | 内容 | 状态 |
 |---|---|---|
 | M1 | 脚手架、抓取层、数据模型、CLI、RepoRadar 实测 | ✅ 2026-10-19 |
-| M2 | 规则库（6 维度基线 29+ 条）+ 证据生成 + 单测 | ✅ 29 条规则、98 个测试函数 |
+| M2 | 规则库（6 维度基线 29+ 条）+ 证据生成 + 单测 | ✅ 29 条规则、117 个测试函数 |
 | M3 | 评分聚合 + 三状态 + 三指标 + 终端/Markdown/HTML 报告 | ✅ |
 | M3.5 | AI 优化建议模块（advice：LLM 客户端 + Prompt + schema + 模板兜底） | ✅ |
 | M4 | 端到端验证与权重校准（RepoRadar + 标杆仓库） | ✅ RepoRadar 端到端实测；权重校准为持续项 |
 | M5 | 规则可配置、报告导出增强 | ✅ |
 | V2 | Google 收录、多模型 AEO 实测、趋势监控、Web | ✅ |
+| V2.3 | 本地工作区 + 一键应用修改（tarball 副本、写权限校验、unified diff） | ✅ 117 个测试函数 / 124 用例 |
 
 > 仍未完成（不在 M1–M5/V2 范围内）：更多原生 AEO 服务商接入、批量仓库对比、PyPI 正式发布。详见 `PROJECT_OUTLINE.md` §14 与 `packages/repo-seo/README.md` 状态清单。
 
