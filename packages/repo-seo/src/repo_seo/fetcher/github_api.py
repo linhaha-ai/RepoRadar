@@ -14,6 +14,7 @@ import httpx
 
 API_BASE = "https://api.github.com"
 API_VERSION = "2022-11-28"
+MAX_ARCHIVE_BYTES = 200 * 1024 * 1024
 
 
 class FetchError(Exception):
@@ -31,6 +32,11 @@ class RateLimitError(FetchError):
 def default_timeout() -> httpx.Timeout:
     """显式分离各阶段超时；连接黑洞时保证快速失败。"""
     return httpx.Timeout(connect=5.0, read=10.0, write=10.0, pool=5.0)
+
+
+def archive_timeout() -> httpx.Timeout:
+    """仓库快照下载超时：体积可能较大，读阶段给更宽裕的时间。"""
+    return httpx.Timeout(connect=10.0, read=120.0, write=30.0, pool=10.0)
 
 
 class GitHubAPI:
@@ -80,6 +86,58 @@ class GitHubAPI:
     # ---------- 仓库元数据 ----------
     def get_repo(self, full_name: str) -> dict:
         return self.get(f"/repos/{full_name}")
+
+    # ---------- 仓库快照（tarball，无需本地 git） ----------
+    def download_tarball(self, full_name: str, ref: str | None = None) -> bytes:
+        """下载某个 ref 的 tar.gz 快照，供 Web「一键应用修改」建立本地副本。
+
+        - 使用 API 端点 /repos/{full_name}/tarball/{ref}，httpx 自动跟随 302 到 codeload；
+        - 私有仓库依赖 Token；超过 200MB 直接失败，避免误拉超大仓库拖垮容器。
+        """
+        path = f"/repos/{full_name}/tarball"
+        if ref:
+            path = f"{path}/{ref}"
+        url = f"{API_BASE}{path}"
+        try:
+            with httpx.stream(
+                "GET",
+                url,
+                headers=self._headers(),
+                timeout=archive_timeout(),
+                follow_redirects=True,
+            ) as resp:
+                if resp.status_code != 200:
+                    body = resp.read().decode("utf-8", errors="replace")
+                    self._raise_for_download(resp.status_code, body, full_name)
+                chunks: list[bytes] = []
+                total = 0
+                for chunk in resp.iter_bytes():
+                    total += len(chunk)
+                    if total > MAX_ARCHIVE_BYTES:
+                        raise FetchError(
+                            "仓库快照超过 200MB 上限，已停止下载。"
+                            "请改用 git clone 手动处理该仓库。"
+                        )
+                    chunks.append(chunk)
+                return b"".join(chunks)
+        except httpx.HTTPError as e:
+            raise FetchError(f"下载仓库快照网络失败：{e}") from e
+
+    @staticmethod
+    def _raise_for_download(status: int, body: str, full_name: str) -> None:
+        lowered = body.lower()
+        if status == 403 and "rate limit" in lowered:
+            raise RateLimitError(
+                "GitHub API 限流（403 rate limit）。请通过 GITHUB_TOKEN 环境变量提供 Token。"
+            )
+        if status in (403, 404):
+            raise RepoNotFoundError(
+                f"无法下载 {full_name} 的仓库快照（{status}）：仓库不存在、"
+                "无访问权限，或 Token 缺少 repo 权限。"
+            )
+        if status == 401:
+            raise FetchError("Token 无效或已过期（401），请检查 GITHUB_TOKEN。")
+        raise FetchError(f"下载仓库快照失败（{status}）：{body[:200]}")
 
     # ---------- README（API 方式，base64） ----------
     def get_readme_via_api(self, full_name: str) -> str | None:
