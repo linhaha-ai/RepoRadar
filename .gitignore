@@ -18,3 +18,7 @@ venv/
 
 # 本地 agent 会话状态（不参与版本管理）
 .omo/
+
+# Playwright MCP 浏览器会话产物（截图 / 快照 / 控制台日志）
+.playwright-mcp/
+/plan-hint-instant.png
