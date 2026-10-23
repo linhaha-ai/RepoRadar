@@ -6,7 +6,8 @@ LABEL org.opencontainers.image.title="RepoRadar" \
       org.opencontainers.image.version="2.2"
 
 ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1
+    PYTHONDONTWRITEBYTECODE=1 \
+    REPO_SEO_WORKSPACE_DIR=/app/workspaces
 
 WORKDIR /app
 
@@ -20,7 +21,7 @@ RUN pip install --no-cache-dir ".[web]" \
 
 # 非 root 运行
 RUN useradd -m -u 1000 reporadar \
-    && mkdir -p /app/.repo-seo-history \
+    && mkdir -p /app/.repo-seo-history /app/workspaces \
     && chown -R reporadar:reporadar /app
 USER reporadar
 

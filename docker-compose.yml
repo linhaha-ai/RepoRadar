@@ -33,9 +33,13 @@ services:
       HTTP_PROXY: ${HTTP_PROXY:-http://host.docker.internal:7890}
       HTTPS_PROXY: ${HTTPS_PROXY:-http://host.docker.internal:7890}
       NO_PROXY: ${NO_PROXY:-localhost,127.0.0.1}
+      # 一键应用修改的本地工作区（命名卷持久化，重建不丢仓库副本）
+      REPO_SEO_WORKSPACE_DIR: /app/workspaces
     volumes:
       - repo-seo-history:/app/.repo-seo-history
+      - repo-seo-workspaces:/app/workspaces
     restart: unless-stopped
 
 volumes:
   repo-seo-history:
+  repo-seo-workspaces:
